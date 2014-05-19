@@ -26,15 +26,20 @@ class RheeParser:
 	def p_program_stmt(self, p):
 		'program : stmt'
 		p[0] = [p[1]]
-	def p_program_empty(self, p):
-		'program : empty'
-		p[0] = []
+	# def p_program_empty(self, p):
+	#	'Note:Bikram: remove this one and add stmt_empty'
+	# 	'program : empty'
+	# 	p[0] = []
+
 
 	def p_stmt(self, p):												# stmt can be single-line or multi-line
-		'''stmt : slstmt
+		'''stmt : empty
+				| slstmt
 				| mlstmt
 		'''
 		p[0] = p[1]
+	
+	# stmt->empty Filters out all the newline stuffs and empty program
 
 	# Single Line Statements begin
 	def p_slstmt(self, p):
@@ -44,6 +49,7 @@ class RheeParser:
 					| input
 					| slif
 					| incremental
+					| return
 		'''
 		p[0] = p[1]
 
@@ -53,7 +59,7 @@ class RheeParser:
 		p[0] = ("expression", p.lineno(1), [p[1]])
 	def p_assignment(self, p):
 		'assignment : IDENTIFIER ASSIGNMENT expr'
-		p[0] = ('assign', p.lineno(1), p[1], p[3])
+		p[0] = ('assign', p.lineno(1), p[1], [p[3]])
 	def p_print(self, p):
 		'print : variableExpr LEKHA SEMICOLON'
 		p[0] = ('print', p.lineno(2), p[1])
@@ -61,7 +67,7 @@ class RheeParser:
 		'print : variableExpr LEKHA'
 		p[0] = ('println', p.lineno(2), p[1])
 	def p_input(self, p):			#@ variableArgs
-		'input : variableArgs LEU'
+		'input : variableExpr LEU'
 		p[0] = ('input', p.lineno(2), p[1])
 	def p_incremental(self, p):
 		'''incremental : IDENTIFIER AI expr
@@ -70,7 +76,9 @@ class RheeParser:
 						| IDENTIFIER DI expr
 		'''
 		p[0] = ('increment', p.lineno(1), p[2], p[1], [p[3]])
-
+	def p_return(self, p):
+		'return : expr PATHAU'
+		p[0] = ('return', [p[1]])
 	# introduces a shift/reduce but is not harmful
 	# dangling else problem solved infavor of shift
 	def p_slif(self, p):
@@ -102,10 +110,10 @@ class RheeParser:
 	# so feature implemented in base if-statement and that worked !!
 	def p_optelse(self, p):										
 		'optelse : ATHAWA expr BHAE NEWLINE program optelse'
-		p[0] = [('else-if', p.lineno(1), [p[2]], p[4])] + p[5]
+		p[0] = [('else-if', p.lineno(1), [p[2]], p[5])] + p[6]
 	def p_optelse_oelf(self, p):								# to remove one shift/reduce of empty production
 		'optelse : ATHAWA expr BHAE NEWLINE program'
-		p[0] = [('else-if', p.lineno(1), [p[2]], p[4])] + p[5]
+		p[0] = [('else-if', p.lineno(1), [p[2]], p[5])]
 	def p_optelse_else(self, p):
 		'optelse : ATHAWA NEWLINE program'
 		p[0] = [('else', p.lineno(1), p[3])]
@@ -113,7 +121,7 @@ class RheeParser:
 	# for loop
 	def p_forloop_default(self, p):
 		'''forloop : SABAI IDENTIFIER ASSIGNMENT expr DEKHI expr NEWLINE program BAISA'''
-		p[0] = ('forloop', p.lineno(1), p[2], [p[4]], [p[6]], [("decimal", p.lineno(1), '१')], p[8])
+		p[0] = ('forloop', p.lineno(1), p[2], [p[4]], [p[6]], [("decimal", p.lineno(1), u'१')], p[8])
 	def p_forloop_increment(self, p):
 		'''forloop : SABAI IDENTIFIER ASSIGNMENT expr DEKHI expr COLON expr NEWLINE program BAISA'''
 		p[0] = ('forloop', p.lineno(1), p[2], [p[4]], [p[6]], [p[8]], p[10])
@@ -145,7 +153,7 @@ class RheeParser:
 		p[0] = [[p[1]]]
 	def p_variableExpr_empty(self, p):
 		'variableExpr : empty'
-		pass
+		p[0] = []
 
 	def p_variableArgs_multi(self, p):
 		'variableArgs : IDENTIFIER COMMA variableArgs'
@@ -158,7 +166,7 @@ class RheeParser:
 		pass
 	def p_variableArgs_empty(self, p):
 		'variableArgs : empty'
-		pass
+		p[0] = []
 
 	# Arithmetic Expression begin
 	def p_expr(self, p):
@@ -263,9 +271,19 @@ if __name__ == '__main__':
 	myLexer.build()
 	myParser = RheeParser()
 	myParser.build(myLexer)
-	myParser.test(u'''७*८ चोटि
-		क लेख
-		टिचो
+	myParser.test(u'''
+	क = ४
+	खाका वस्तु
+		क = ४
+		ख = ९
+		काम रचना()
+			क = ५
+			ग = ७
+		मका
+		काम टेस्ट(क, ख, ग)
 		७*८ चोटि
-		क लेख
-		टिचो''', myLexer)
+			क लेख
+		टिचो
+		मका
+	काखा
+	त = वस्तु()''', myLexer)

@@ -47,9 +47,9 @@ class RheeInterpreter(UnitInterpreter):
 			if stmt == 'decimal':
 				return self.num_mapper(tree[2])
 			elif stmt == 'octal':
-				pass
+				return self.num_mapper(tree[2], 8)
 			elif stmt == 'hexa':
-				pass
+				return self.num_mapper(tree[2], 16)
 			elif stmt == 'float':
 				return self.num_mapper(tree[2])
 			elif stmt == 'imaginary':
@@ -59,7 +59,7 @@ class RheeInterpreter(UnitInterpreter):
 			elif stmt == 'identifier':
 				return self.env_lookup(tree[2], env)
 			elif stmt == 'functioncall':
-				pass
+				return self.i_functioncall(tree, env)
 			elif stmt == 'unaryminus':
 				return -1 * self.interpret(tree[2], env)
 			elif stmt == 'arithop':
@@ -69,35 +69,65 @@ class RheeInterpreter(UnitInterpreter):
 			elif stmt == 'binop':
 				return self.i_binop(tree, env)
 			elif stmt == 'negation':
-				pass
-			elif stmt == 'expression':
-				pass
+				return self.i_negation(tree,env)
+			elif stmt == 'expression':	# @ return
+				self.interpret(tree[2], env)
 			elif stmt == 'assign':
-				pass
+				self.add_to_env(env, tree[2], self.interpret(tree[3], env))
 			elif stmt == 'print':
-				self.i_print(tree, env)
-			elif stmt == 'println':
 				self.i_print(tree[2], env)
+			elif stmt == 'println':
+				self.i_println(tree[2], env)
 			elif stmt == 'input':
-				pass
-			elif stmt == 'incremental':
-				pass
+				self.i_input(tree[2], env)
+			elif stmt == 'increment':
+				self.i_increment(tree, env)
+			elif stmt == 'return':
+				self.i_return(tree, env)
 			elif stmt == 'slif':
-				pass
+				self.i_slif(tree, env)
 			elif stmt == 'mlif':
-				pass
+				self.i_mlif(tree, env)
 			elif stmt == 'forloop':
-				pass
+				self.i_forloop(tree, env)
 			elif stmt == 'whileloop':
-				pass
+				self.i_whileloop(tree, env)
 			elif stmt == 'repeatloop':
-				pass
+				self.i_repeatloop(tree, env)
 			elif stmt == 'functiondef':
-				pass
+				self.i_functiondef(tree, env)
 			elif stmt == 'classdef':
-				pass
+				self.i_classdef(tree, env)
+			else:
+				self.display('unimplemented handle for ' + stmt)
 
 
+
+	def add_to_env(self, env, vname, value):
+		(env[1])[vname] = value
+	def env_update(self, env, vname, value):	# @TODO get detail about the variable scope management
+		(env[1])[vname] = value
+		return True
+	def env_lookup(self, vname, env, local=False):
+		if vname in env[1]:
+			return (env[1])[vname]
+		elif env[0] == None or local:
+			self.display('undefined variable ')# + vname)
+			return 'undefined'
+			# raise NameError
+		else:
+			return self.env_lookup(vname, env[0])
+
+
+
+
+	def test_envlookup(self):
+		env = (None, {'a':3, 'er':'tes'})
+		newenv = (env, {'a':6, 'r':34, 'rest':'ters'})
+		newenv2 = (newenv, {'a':5, 'w':567, 'ew':'ksli'})
+		print self.env_lookup('a', newenv)
+		print self.env_lookup('er', newenv2)
+		print self.env_lookup('ewer', newenv2)
 
 
 
@@ -111,6 +141,7 @@ if __name__ == '__main__':
 	myParser = RheeParser()
 	myParser.build(myLexer)
 	ast = myParser.test(u'''-(९^३)*९/४ लेख
+		०३४ लेख
 		''', myLexer)
 
 	myInterpreter = RheeInterpreter()
