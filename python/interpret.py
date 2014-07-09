@@ -60,6 +60,8 @@ class RheeInterpreter(UnitInterpreter):
 				return self.env_lookup(tree[2], env)
 			elif stmt == 'functioncall':
 				return self.i_functioncall(tree, env)
+			elif stmt == 'reference':
+				return self.i_reference(tree, env)
 			elif stmt == 'unaryminus':
 				return -1 * self.interpret(tree[2], env)
 			elif stmt == 'arithop':
@@ -82,7 +84,7 @@ class RheeInterpreter(UnitInterpreter):
 				self.i_input(tree[2], env)
 			elif stmt == 'increment':
 				self.i_increment(tree, env)
-			elif stmt == 'return':
+			elif stmt == 'return':  #?
 				self.i_return(tree, env)
 			elif stmt == 'slif':
 				self.i_slif(tree, env)
@@ -108,14 +110,16 @@ class RheeInterpreter(UnitInterpreter):
 	def env_update(self, env, vname, value):	# @TODO get detail about the variable scope management
 		(env[1])[vname] = value
 		return True
-	def env_lookup(self, vname, env, local=False):
+	def env_lookup(self, vname, env, depth=-1):
 		if vname in env[1]:
 			return (env[1])[vname]
-		elif env[0] == None or local:
+		elif env[0] == None or depth==1:
 			self.display('undefined variable ')# + vname)
+			# exit(-1)
 			return 'undefined'
 			# raise NameError
 		else:
+			depth -= 1
 			return self.env_lookup(vname, env[0])
 
 
@@ -140,12 +144,26 @@ if __name__ == '__main__':
 	myLexer.build()
 	myParser = RheeParser()
 	myParser.build(myLexer)
-	ast = myParser.test(u'''-(९^३)*९/४ लेख
-		०३४ लेख
+	ast = myParser.test(u'''क = ४
+	ख = ९
+	काम टेस्ट(ख, ग)
+		काम टेस्ट(ख, ग)
+			७ चोटि
+				क, ख, ग लेख
+			टिचो
+			७ * ७ पठाउ
+		मका
+		टेस्ट(९९९९९९, ९९९९) लेख
+		७ पठाउ
+	मका
+	टेस्ट(९९, ९९९) लेख
 		''', myLexer)
 
 	myInterpreter = RheeInterpreter()
 	myInterpreter.interpret(ast)
+
+	import json
+	print json.dumps(ast)
 
 	# from TestSet import lextest
 

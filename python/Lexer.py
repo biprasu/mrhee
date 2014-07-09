@@ -5,7 +5,6 @@ Set of regular expression defining a lexer for Rhee Programming Language
 '''
 
 import ply.lex as lex
-import NumberMapper as nm
 
 tokens = []
 

@@ -39,9 +39,12 @@ program = u'''
 			क लेख
 		टिचो
 		मका
+		काम फ़क्तोरिअल् (ल)
+			यदि ल==१ भए १ पठाउ अथवा ल * फ़क्तोरिअल्(ल-१) पठाउ
+		मका
 	काखा
 	त = वस्तु()
-	त लेख
+	त.फ़क्तोरिअल्(५) लेख
 	'''
 
 myLexer.test(program)
@@ -54,6 +57,8 @@ from interpret import RheeInterpreter
 
 myInterpreter = RheeInterpreter()
 myInterpreter.interpret(ast)
+
+# print type(4) is tuple
 # print myInterpreter.environment
 
 # print len([])
@@ -87,4 +92,4 @@ myInterpreter.interpret(ast)
 # for i in lextest:
 # 	# print i
 # 	print i + "\t" +str(myInterpreter.num_mapper(lextest[i]))
-		
+# @TODO infinite recursion problem

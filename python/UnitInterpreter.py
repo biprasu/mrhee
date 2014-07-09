@@ -10,7 +10,7 @@ class UnitInterpreter:
 		self.display('')
 
 	def i_input(self, alist, env):
-		# @TODO check for atleast one identifier warning!!
+		# @TODO check for atleast one identifier -> warning!!
 		for item in alist:
 			tag = item[0][0]
 
@@ -143,15 +143,18 @@ class UnitInterpreter:
 		fvalue	= ('function', fparams, fbody, env)
 		self.add_to_env(env, fname, fvalue)
 
-	def i_functioncall(self, tree, env):
+	def i_functioncall(self, tree, env, depth=-1, globalenv = None):
 		fname = tree[2]
 		args  = tree[3]
 
-		fvalue = self.env_lookup(fname, env)
+		fvalue = self.env_lookup(fname, env, depth)
 
 		if fvalue == 'undefined':
 			self.display('Reference to undefined function!!')
 			return
+
+		if globalenv:
+			env = globalenv
 
 		ftype = fvalue[0]
 		if ftype == 'function':
@@ -182,7 +185,7 @@ class UnitInterpreter:
 	def i_fcall_objinit(self, classrep, args , env):
 		cenv = classrep[1]
 
-		fvalue = self.env_lookup(u'रचना', cenv, local=True)
+		fvalue = self.env_lookup(u'रचना', cenv, depth=1)
 		
 		objenv = (cenv, {})
 
@@ -207,6 +210,42 @@ class UnitInterpreter:
 		ovalue = ('object', objenv)
 		return ovalue
 		# self.add_to_env(env, )
+
+	def i_reference(self, tree, env):
+		tempenv = env
+
+		item = tree[2][0]
+		if item[0] == 'identifier': 				# search upto global scope
+			retobj = self.env_lookup(item[2], tempenv, depth=-1)
+		elif item[0] == 'functioncall':
+			retobj = self.i_functioncall(item, tempenv, depth=-1)
+		
+		for item in tree[2][1:]:
+			if type(retobj) is tuple:
+				if retobj[0] != 'object':
+					self.display('Error!! ' + retobj[0] + 'cannot be referenced')
+					exit(-1)
+
+				tempenv = retobj[1]
+			else:
+				tempenv = (None, {})
+
+			if item[0] == 'identifier': 				# search upto class level
+				retobj = self.env_lookup(item[2], tempenv, depth=2)
+			elif item[0] == 'functioncall':
+				retobj = self.i_functioncall(item, tempenv, depth=2, globalenv=env)
+
+		return retobj
+
+
+
+			# try:
+			# 	self.interpret(item, env)
+			# except ReturnException as e:
+			# 	if type(e.returnval) is tuple:
+			# 		if e.returnval[0] == 'object':
+			# 			tempenv = e.returnval[1]
+			# 			continue
 
 
 

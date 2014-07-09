@@ -34,7 +34,6 @@ class RheeParser:
 
 	def p_stmt(self, p):												# stmt can be single-line or multi-line
 		'''stmt : slstmt
-				| mlstmt
 		'''
 		p[0] = p[1]
 
@@ -43,9 +42,9 @@ class RheeParser:
 		'''slstmt : expression
 		'''
 		p[0] = p[1]
-	def p_mlstmt(self, p):
-		'mlstmt : empty'
-		pass
+	# def p_mlstmt(self, p):
+	# 	'mlstmt : empty'
+	# 	pass
 
 	# simple statement begins
 	def p_expression(self, p):

@@ -21,8 +21,8 @@ class RheeParser:
 		p[0] = p[1]
 
 	def p_program_recursive(self, p):
-		'program : stmt NEWLINE program'
-		p[0] = [p[1]] + p[3]
+		'program : program NEWLINE stmt'
+		p[0] = p[1] + [p[3]]
 	def p_program_stmt(self, p):
 		'program : stmt'
 		p[0] = [p[1]]
@@ -188,8 +188,7 @@ class RheeParser:
 				| float
 				| imaginary
 				| string
-				| identifier
-				| functioncall
+				| reference
 		'''
 		p[0] = p[1]
 
@@ -211,12 +210,25 @@ class RheeParser:
 	def p_string(self, p):
 		'string : STRING'
 		p[0] = ('string', p.lineno(1), p[1])
+
+	def p_reference(self, p):
+		'''reference : identifier
+						| functioncall
+		'''
+		p[0] = p[1]
+	def p_reference_nested(self, p):
+		'''reference : reference DOT identifier
+						| reference DOT functioncall
+		'''
+		p[0] = ('reference', p.lineno(1), [p[1]] + [p[3]])
+
 	def p_identifier(self, p):
 		'identifier : IDENTIFIER'
 		p[0] = ('identifier', p.lineno(1), p[1])
 	def p_functioncall(self, p):
 		'functioncall : IDENTIFIER LPARA variableExpr RPARA'
 		p[0]= ('functioncall', p.lineno(1), p[1], p[3])
+
 
 	def p_uminus(self, p):
 		'expr : MINUS expr   %prec UMINUS'
