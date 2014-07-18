@@ -1,38 +1,12 @@
 #encoding=utf8
 
 from UnitInterpreter import UnitInterpreter
+from UnitInterpreter import ContinueException, BreakException
 
 class RheeInterpreter(UnitInterpreter):
 	"""docstring for RheeInterpreter"""
 
 	environment = (None,{})
-
-	# ibase = {'decimal': i_decimal,
-	# 		'octal': i_octal,
-	# 		'hexa': i_hexa,
-	# 		'float': i_float,
-	# 		'imaginary': i_imaginary,
-	# 		'string': i_string,
-	# 		'identifier': i_identifier,
-	# 		'functioncall': i_functioncall,
-	# 		'unaryminus': i_unaryminus,
-	# 		'arithop': i_arithop,
-	# 		'paranthesis': i_paranthesis,
-	# 		'binop': i_binop,
-	# 		'negation': i_negation,
-	# 		'expression': i_expression,
-	# 		'assign': i_assign,
-	# 		'print': i_print,
-	# 		'println': i_println,
-	# 		'input': i_input,
-	# 		'incremental': i_incremental,
-	# 		'slif': i_slif,
-	# 		'mlif': i_mlif,
-	# 		'forloop': i_forloop,
-	# 		'whileloop': i_whileloop,
-	# 		'repeatloop': i_repeatloop,
-	# 		'functiondef': i_functiondef,
-	# 		'classdef': i_classdef,}
 
 	def interpret(self, trees, env = None):
 		if not env:	env = self.environment
@@ -56,12 +30,22 @@ class RheeInterpreter(UnitInterpreter):
 				pass
 			elif stmt == 'string':
 				return tree[2]
+			elif stmt == 'null':
+				return None
+			elif stmt == 'true':
+				return True
+			elif stmt == 'false':
+				return False
+			elif stmt == 'array':
+				return [self.interpret(t) for t in tree[2]]
 			elif stmt == 'identifier':
 				return self.env_lookup(tree[2], env)
 			elif stmt == 'functioncall':
 				return self.i_functioncall(tree, env)
 			elif stmt == 'reference':
 				return self.i_reference(tree, env)
+			elif stmt == 'aryreference':
+				return self.i_aryreference(tree, env)
 			elif stmt == 'unaryminus':
 				return -1 * self.interpret(tree[2], env)
 			elif stmt == 'arithop':
@@ -75,7 +59,7 @@ class RheeInterpreter(UnitInterpreter):
 			elif stmt == 'expression':	# @ return
 				self.interpret(tree[2], env)
 			elif stmt == 'assign':
-				self.add_to_env(env, tree[2], self.interpret(tree[3], env))
+				self.i_assign(tree, env)
 			elif stmt == 'print':
 				self.i_print(tree[2], env)
 			elif stmt == 'println':
@@ -86,6 +70,10 @@ class RheeInterpreter(UnitInterpreter):
 				self.i_increment(tree, env)
 			elif stmt == 'return':  #?
 				self.i_return(tree, env)
+			elif stmt == 'continue':
+				raise ContinueException("continue")
+			elif stmt == 'break':
+				raise BreakException("Break")
 			elif stmt == 'slif':
 				self.i_slif(tree, env)
 			elif stmt == 'mlif':
@@ -100,8 +88,10 @@ class RheeInterpreter(UnitInterpreter):
 				self.i_functiondef(tree, env)
 			elif stmt == 'classdef':
 				self.i_classdef(tree, env)
+			elif stmt == 'SyntaxError':
+				self.display('SyntaxError!! '+tree[2]+ " on line " + str(lineno))
 			else:
-				self.display('unimplemented handle for ' + stmt)
+				self.display('unimplemented handle for ' + tree)
 
 
 
@@ -110,6 +100,12 @@ class RheeInterpreter(UnitInterpreter):
 	def env_update(self, env, vname, value):	# @TODO get detail about the variable scope management
 		(env[1])[vname] = value
 		return True
+	def env_update_array(self, env, vname, indx, value):
+		temp = (env[1])[vname]
+		for i in indx[:-1]:
+			temp = temp[i]
+		temp[indx[-1]] = value
+
 	def env_lookup(self, vname, env, depth=-1):
 		if vname in env[1]:
 			return (env[1])[vname]
@@ -145,19 +141,14 @@ if __name__ == '__main__':
 	myParser = RheeParser()
 	myParser.build(myLexer)
 	ast = myParser.test(u'''क = ४
-	ख = ९
-	काम टेस्ट(ख, ग)
-		काम टेस्ट(ख, ग)
-			७ चोटि
-				क, ख, ग लेख
-			टिचो
-			७ * ७ पठाउ
-		मका
-		टेस्ट(९९९९९९, ९९९९) लेख
-		७ पठाउ
-	मका
-	टेस्ट(९९, ९९९) लेख
+यदि क == ख छ भए 
+क लेख
+अथवा क == ख छैन भ
+ख लेख
+दिय
 		''', myLexer)
+
+	print ast
 
 	myInterpreter = RheeInterpreter()
 	myInterpreter.interpret(ast)

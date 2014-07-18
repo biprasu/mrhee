@@ -227,6 +227,21 @@ interpretlist = [u'''
 	त = वस्तु()
 	त.फ़क्तोरिअल्(५) लेख
 	''', # object + recursion + function reference
+	'''
+	त = शुन्य
+	त लेख''', # sunya
+
+	u'''
+	त = शुन्य
+	यदि साचो भए त लेख
+	यदि झुटो छैन भए त लेख
+	''', # booleans
+	'''क = [२*३,'टेस्ट',[२,३,५]]
+		क[०] लेख
+		क[५][२] लेख
+		ख = क[२][०] + क[०]
+		//क[१] = ४
+	''', # arrays
 ]
 
 jsTestset = ["""०x३४A, ०३, 'test' लेख;
@@ -263,3 +278,17 @@ error = [
 		u'०९ लेख',
 
 		]
+class BreakException(Exception):
+	def __init__(self, message):
+		Exception.__init__(self, message)
+
+
+try:
+	raise BreakException('break')
+except BreakException, e:
+	print "i was here"
+	raise
+else:
+	pass
+finally:
+	pass

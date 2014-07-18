@@ -31,6 +31,7 @@ class RheeLexer:
     u'काम' : 'KAAM',
     u'मका' : 'MAKA',
     u'पठाउ' : 'PATHAU',
+
     u'मा' : 'MA',
     u'बाट' : 'BATA',
     u'बन्दगर' :'BANDAGARA',
@@ -40,9 +41,13 @@ class RheeLexer:
     u'कोर' : 'KORA',
     u'मेटाउ' : 'METAU',
     u'हटाउ' : 'HATAU',
-    u'बाहिर' : 'BAHIRA',
-    u'अर्को': "ARKO",
+    
     u'शुन्य' : 'SUNYA',
+    u'साचो'	: 'SACHO',
+    u'झुटो'	: 'JHUTO',
+
+    u'बाहिर' : 'BAHIRA',
+    u'अर्को': 'ARKO',
     u'चोटि' : 'CHOTI',
     u'टिचो' : 'TICHO',
     u'खाका'	: 'KHAKA',

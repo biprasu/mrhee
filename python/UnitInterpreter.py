@@ -1,6 +1,19 @@
 #encoding=utf8
 class UnitInterpreter:
 
+	def i_assign(self, tree, env):
+		refernc = tree[2]
+
+		if (refernc[0] == 'functioncall'):
+			self.error("Function can not be assigned")
+			return
+		elif (refernc[0] == 'identifier'):
+			self.add_to_env(env, refernc[2], self.interpret(tree[3], env))
+		elif ( refernc[0] == 'reference'):
+			self.i_reference(refernc, env, self.interpret(tree[3], env))
+		elif (refernc[0] == 'aryreference'):
+			self.i_aryassign(refernc, env, self.interpret(tree[3], env))
+		
 	def i_print(self, tree, env):
 		for item in tree:
 			self.display(self.interpret(item, env))
@@ -119,22 +132,37 @@ class UnitInterpreter:
 		self.add_to_env(env, tree[2], pre)
 
 		while self.env_lookup(tree[2], env) != post:
-			self.interpret(tree[6], env)
-			pre = self.env_lookup(tree[2], env) + self.interpret(tree[5], env)
-			self.env_update(env, tree[2], pre)
+			try:
+				self.interpret(tree[6], env)
+				pre = self.env_lookup(tree[2], env) + self.interpret(tree[5], env)
+				self.env_update(env, tree[2], pre)
+			except BreakException as e:
+				break
+			except ContinueException as e1:
+				pass
 
 	def i_whileloop(self, tree, env):
 		expr = self.interpret(tree[2], env)
 
 		while expr:
-			self.interpret(tree[3], env)
-			expr = self.interpret(tree[2], env)
+			try:
+				self.interpret(tree[3], env)
+				expr = self.interpret(tree[2], env)
+			except BreakException as e:
+				break
+			except ContinueException as e:
+				pass
 
 	def i_repeatloop(self, tree, env):
 		iter = self.interpret(tree[2], env)
 
 		for i in xrange(iter):
-			self.interpret(tree[3], env)
+			try:
+				self.interpret(tree[3], env)
+			except BreakException as e:
+				break
+			except ContinueException as e:
+				pass
 
 	def i_functiondef(self, tree, env):
 		fname 	= tree[2]
@@ -211,16 +239,16 @@ class UnitInterpreter:
 		return ovalue
 		# self.add_to_env(env, )
 
-	def i_reference(self, tree, env):
+	def i_reference(self, tree, env, assign=None):
 		tempenv = env
 
-		item = tree[2][0]
+		item = tree[2][0]			# first item in chain
 		if item[0] == 'identifier': 				# search upto global scope
 			retobj = self.env_lookup(item[2], tempenv, depth=-1)
 		elif item[0] == 'functioncall':
 			retobj = self.i_functioncall(item, tempenv, depth=-1)
 		
-		for item in tree[2][1:]:
+		for item in tree[2][1:]:		# remaining chain
 			if type(retobj) is tuple:
 				if retobj[0] != 'object':
 					self.display('Error!! ' + retobj[0] + 'cannot be referenced')
@@ -231,13 +259,51 @@ class UnitInterpreter:
 				tempenv = (None, {})
 
 			if item[0] == 'identifier': 				# search upto class level
+				if (assign and item == tree[2][-1]):
+					# if assign and is last item
+					self.env_update(tempenv, item[2], assign)
 				retobj = self.env_lookup(item[2], tempenv, depth=2)
 			elif item[0] == 'functioncall':
+				if (assign):
+					self.error("Chaining up with function to assign doesn't make sense.")
 				retobj = self.i_functioncall(item, tempenv, depth=2, globalenv=env)
-
+		
 		return retobj
 
+	def i_aryreference(self, tree, env):
 
+		ident = tree[2]
+		idata = self.env_lookup(ident[2], env)
+
+		indices = tree[3]
+		start = None
+		end = None
+
+		for item in indices:
+			#if idata is not array index error
+			start 	= self.interpret(item[2], env)
+			if (item[0] == 'normal'):
+				idata = idata[start]
+			else:
+				end  = self.interpret(item[2], env)
+				idata = idata[start:end]
+
+		return idata
+
+	def i_aryassign(self, tree, env, assign):
+		ident = tree[2]
+
+		indices = tree[3]
+		tinx  	= []
+
+		for item in indices:
+			if item[0] == 'arrayslice':
+				self.error("Array slice assignment not supported")
+
+			tinx += [self.interpret(item[2],env)]
+
+		self.env_update_array(env, ident[2], tinx, assign) 
+		return True
 
 			# try:
 			# 	self.interpret(item, env)
@@ -313,3 +379,12 @@ class ReturnException(Exception):
 	def __init__(self, message, returnval):
 		Exception.__init__(self, message)
 		self.returnval = returnval
+
+class ContinueException(Exception):
+	def __init__(self, message):
+		Exception.__init__(self, message)
+
+class BreakException(Exception):
+	def __init__(self, message):
+		Exception.__init__(self, message)
+		
