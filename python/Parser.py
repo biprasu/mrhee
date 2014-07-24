@@ -27,7 +27,6 @@ class RheeParser:
 		'program : stmt'
 		p[0] = [p[1]]
 	# def p_program_empty(self, p):
-	#	'Note:Bikram: remove this one and add stmt_empty'
 	# 	'program : empty'
 	# 	p[0] = []
 
@@ -77,7 +76,11 @@ class RheeParser:
 						| IDENTIFIER MI expr
 						| IDENTIFIER DI expr
 		'''
-		p[0] = ('increment', p.lineno(1), p[2], p[1], [p[3]])
+		p[0] = ('assign', p.lineno(1), 
+					('identifier', p.lineno(1), p[1]), 
+					[('arithop', p.lineno(1), p[2][0], 
+						[('identifier', p.lineno(1), p[1])], [p[3]])])
+		# p[0] = ('increment', p.lineno(1), p[2], p[1], [p[3]])
 	def p_return(self, p):
 		'return : expr PATHAU'
 		p[0] = ('return', [p[1]])
@@ -171,9 +174,9 @@ class RheeParser:
 	def p_variableArgs_single(self, p):
 		'variableArgs : IDENTIFIER'
 		p[0] = [p[1]]
-	def p_variableArgs_bogus(self, p):
-		'variableArgs : IDENTIFIER BOGUS'
-		pass
+	# def p_variableArgs_bogus(self, p):
+	# 	'variableArgs : IDENTIFIER BOGUS'
+	# 	pass
 	def p_variableArgs_empty(self, p):
 		'variableArgs : empty'
 		p[0] = []
@@ -302,9 +305,9 @@ class RheeParser:
 		pass
 	def p_error(self, p):
 		if p:
-			print "Syntax Error Near : " + str(p.type) + " in line number " + str(p.lineno) + " " + str(p.lexpos)
+			self.syntaxError += [('SyntaxError', p.lineno, "Syntax Error Near : " + str(p.type) + " in line number " + str(p.lineno) + " " + str(p.lexpos))]
 		else:
-			print "Syntax Error Near : None" 
+			self.syntaxError += [('SyntaxError', '', "Syntax Error Near : None" )]
 
 	syntaxErrors = []
 	# error handeling stuffs
@@ -335,6 +338,35 @@ class RheeParser:
 		'''
 		self.syntaxError += [('SyntaxError', p.lineno(3), 'yedi without BHAE')]
 
+	def p_function_argerror(self, p):
+		'function : KAAM IDENTIFIER LPARA error RPARA NEWLINE program MAKA'
+		self.syntaxError += [('SyntaxError', p.lineno(4), 'Function parameters should be identifiers')]
+
+	# error in expressions
+	# I don't think we should keep these things
+	# they are better handled in error function
+	# or I may be wrong
+	# def p_assignment_error(self, p):
+	# 	'assignment : IDENTIFIER ASSIGNMENT error'
+	# 	self.syntaxError += [('SyntaxError', p.lineno(3), "Not a valid expression or statement ")]
+
+	# def p_incremental_error(self, p):
+	# 	'''incremental : IDENTIFIER AI error
+	# 					| IDENTIFIER SI error
+	# 					| IDENTIFIER MI error
+	# 					| IDENTIFIER DI error
+	# 	'''
+	# 	self.syntaxError += [('SyntaxError', p.lineno(3), "Not a valid expression or statement")]		
+
+	# def p_return_error(self, p):
+	# 	'return : error PATHAU'
+	# 	self.syntaxError += [('SyntaxError', p.lineno(3), "Not a valid expression in Return statement")]
+
+	# def p_slif_error(self, p):
+	# 	'''slif : YEDI error BHAE slstmt ATHAWA slstmt
+	# 			| YEDI error BHAE slstmt 
+	# 	'''
+	# 	self.syntaxError += [('SyntaxError', p.lineno(3), "Not a valid expression for if statement")]
 
 
 
@@ -371,8 +403,7 @@ if __name__ == '__main__':
 	myParser = RheeParser()
 	myParser.build(myLexer)
 	myParser.test(u'''
-यदि क == ख छ भए 
-क लेख
-अथवा क == ख छैन भ
-ख लेख
+यक = *ख
+यक = ख
+यक *= ख
 		''', myLexer)

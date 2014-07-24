@@ -1,5 +1,6 @@
 #encoding=utf8
-class UnitInterpreter:
+from RheeTypeError import RheeTypeError
+class UnitInterpreter(RheeTypeError):
 
 	def i_assign(self, tree, env):
 		refernc = tree[2]
@@ -16,10 +17,12 @@ class UnitInterpreter:
 		
 	def i_print(self, tree, env):
 		for item in tree:
-			self.display(self.interpret(item, env))
+			evalexp = self.interpret(item, env)
+			self.display(self.e_print(evalexp))
 	def i_println(self, tree, env):
 		for item in tree:
-			self.display(self.interpret(item, env), False)
+			evalexp = self.interpret(item, env)
+			self.display(self.e_print(evalexp), False)
 		self.display('')
 
 	def i_input(self, alist, env):
@@ -37,6 +40,9 @@ class UnitInterpreter:
 
 		lhs = self.interpret(tree[3], env)
 		rhs = self.interpret(tree[4], env)
+
+		self.e_arithop(lhs, operator, rhs)
+		if type(lhs) in [str, unicode]:	rhs = str(rhs)
 
 		if operator == '+':
 			return lhs + rhs
@@ -83,33 +89,25 @@ class UnitInterpreter:
 		elif operator == u'छैन':
 			return not self.interpret(tree[3], env)
 
-	def i_increment(self, tree, env):
-		operator = tree[2]
-		lhs = self.interpret(tree[4], env)
-		iden = self.env_lookup(tree[3], env)
-
-		if operator == '+=':
-			self.env_update(env, tree[3], iden + lhs)
-		elif operator == '-=':
-			self.env_update(env, tree[3], iden - lhs)
-		elif operator == '*=':
-			self.env_update(env, tree[3] , iden * lhs)
-		elif operator == '/=':
-			self.env_update(env, tree[3], iden / lhs)
-
 	def i_return(self, tree, env):
 		value = self.interpret(tree[1], env)
 		raise ReturnException('functionReturn', value)
 
 
 	def i_slif(self, tree, env):
-		if self.interpret(tree[2], env):
+		evalexp = self.interpret(tree[2], env)
+		evalexp = self.e_boolean(evalexp)
+		
+		if evalexp:
 			self.interpret(tree[3], env)
 		else:
 			if tree[4]:	self.interpret(tree[4], env)
 
 	def i_mlif(self, tree, env):
-		if self.interpret(tree[2], env):
+		evalexp = self.interpret(tree[2], env)
+		evalexp = self.e_boolean(evalexp)
+
+		if evalexp:
 			self.interpret(tree[3], env)
 		else:
 			if tree[4]:
@@ -117,32 +115,42 @@ class UnitInterpreter:
 					tag = elblock[0]
 
 					if tag == 'else-if':
-						if self.interpret(elblock[2]):
-							self.interpret(elblock[3])
+						evalexp = self.interpret(elblock[2], env)
+						evalexp = self.e_boolean(evalexp)
+				
+						if evalexp:
+							self.interpret(elblock[3], env)
 							break	# so that only single branch is executed
 					elif tag == 'else':
-						self.interpret(elblock[2])
+						self.interpret(elblock[2], env)
 						break
 
 
 	def i_forloop(self, tree, env):
 		pre = self.interpret(tree[3], env)
 		post = self.interpret(tree[4], env)
+		step = self.interpret(tree[5], env)
+
+		if not self.e_forloop(pre, post, step):
+			self.error("expressions in for loop should be numbers " + str(tree[1]))
+			return
 
 		self.add_to_env(env, tree[2], pre)
 
 		while self.env_lookup(tree[2], env) != post:
 			try:
 				self.interpret(tree[6], env)
-				pre = self.env_lookup(tree[2], env) + self.interpret(tree[5], env)
-				self.env_update(env, tree[2], pre)
 			except BreakException as e:
 				break
 			except ContinueException as e1:
 				pass
+			finally:
+				pre = self.env_lookup(tree[2], env) + step
+				self.env_update(env, tree[2], pre)
 
 	def i_whileloop(self, tree, env):
 		expr = self.interpret(tree[2], env)
+		expr = self.e_boolean(expr)
 
 		while expr:
 			try:
@@ -156,6 +164,9 @@ class UnitInterpreter:
 	def i_repeatloop(self, tree, env):
 		iter = self.interpret(tree[2], env)
 
+		if not (type(iter) in [int, float]):
+			self.error("Choti iteration only supports integers")
+
 		for i in xrange(iter):
 			try:
 				self.interpret(tree[3], env)
@@ -168,10 +179,11 @@ class UnitInterpreter:
 		fname 	= tree[2]
 		fparams	= tree[3]
 		fbody	= tree[4]
-		fvalue	= ('function', fparams, fbody, env)
+		fvalue	= ('function', fparams, fbody, env, fname)
 		self.add_to_env(env, fname, fvalue)
 
 	def i_functioncall(self, tree, env, depth=-1, globalenv = None):
+		lineno = tree[1]
 		fname = tree[2]
 		args  = tree[3]
 
@@ -186,18 +198,18 @@ class UnitInterpreter:
 
 		ftype = fvalue[0]
 		if ftype == 'function':
-			return self.i_fcall_function(fvalue, args, env)
+			return self.i_fcall_function(fvalue, args, env, lineno)
 		elif ftype == 'class':
-			return self.i_fcall_objinit(fvalue, args, env)
+			return self.i_fcall_objinit(fvalue, args, env, lineno)
 
 		
-	def i_fcall_function(self, fvalue, args, env):
+	def i_fcall_function(self, fvalue, args, env, lineno):
 		fparams = fvalue[1]
 		fbody	= fvalue[2]
 		fenv	= fvalue[3]
 
 		if len(args) != len(fparams):
-			self.display('invalid number of params')
+			self.error('Invalid number of params to the function ' + str(lineno))
 			return
 
 		newenv = (fenv, {})
@@ -210,14 +222,14 @@ class UnitInterpreter:
 		except ReturnException as e:
 			return e.returnval
 
-	def i_fcall_objinit(self, classrep, args , env):
+	def i_fcall_objinit(self, classrep, args , env, lineno):
 		cenv = classrep[1]
 
 		fvalue = self.env_lookup(u'रचना', cenv, depth=1)
 		
 		objenv = (cenv, {})
 
-		if fvalue != 'undefined' and fvalue:
+		if fvalue != 'undefined' and fvalue:	# if class has a constructor
 			fparams = fvalue[1]
 			fbody	= fvalue[2]
 			fenv	= fvalue[3]
@@ -235,7 +247,7 @@ class UnitInterpreter:
 			except ReturnException as e:
 				self.display("Returned value is of no value")
 		
-		ovalue = ('object', objenv)
+		ovalue = ('object', objenv, classrep[2])
 		return ovalue
 		# self.add_to_env(env, )
 
@@ -282,10 +294,16 @@ class UnitInterpreter:
 		for item in indices:
 			#if idata is not array index error
 			start 	= self.interpret(item[2], env)
+
 			if (item[0] == 'normal'):
+				self.e_aryref(start, None, len(idata))		# typechecking
+
 				idata = idata[start]
 			else:
 				end  = self.interpret(item[2], env)
+				
+				self.e_aryref(start, end, len(idata))
+				
 				idata = idata[start:end]
 
 		return idata
@@ -295,12 +313,17 @@ class UnitInterpreter:
 
 		indices = tree[3]
 		tinx  	= []
+		mini	= None
 
 		for item in indices:
 			if item[0] == 'arrayslice':
-				self.error("Array slice assignment not supported")
+				self.error("Array slice assignment not supported yet")
+				return
 
-			tinx += [self.interpret(item[2],env)]
+			mini = self.interpret(item[2],env)
+			self.e_aryassign(mini)					# typechecking
+				
+			tinx += [mini]
 
 		self.env_update_array(env, ident[2], tinx, assign) 
 		return True
@@ -322,7 +345,7 @@ class UnitInterpreter:
 		cenv = (env, {})
 		self.interpret(cbody, cenv)
 
-		cvalue = ('class', cenv)
+		cvalue = ('class', cenv, cname)
 		self.add_to_env(env, cname, cvalue)
 
 
@@ -363,10 +386,10 @@ class UnitInterpreter:
 		return raw_input(content)	# always returns a string version
 	
 
-	def report_error(self, msg):
-		# print "ERROR!! " + msg;
-		# exit(0)
-		pass
+	def error(self, msg):
+		print "ERROR!! " + msg;
+		exit(0)
+		# pass
 
 a = UnitInterpreter()
 # a.test_envlookup()

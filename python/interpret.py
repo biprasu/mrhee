@@ -66,8 +66,6 @@ class RheeInterpreter(UnitInterpreter):
 				self.i_println(tree[2], env)
 			elif stmt == 'input':
 				self.i_input(tree[2], env)
-			elif stmt == 'increment':
-				self.i_increment(tree, env)
 			elif stmt == 'return':  #?
 				self.i_return(tree, env)
 			elif stmt == 'continue':
@@ -102,7 +100,12 @@ class RheeInterpreter(UnitInterpreter):
 		return True
 	def env_update_array(self, env, vname, indx, value):
 		temp = (env[1])[vname]
+		
 		for i in indx[:-1]:
+			if i>len(temp):
+				self.error("Array index out of bound")
+				return
+
 			temp = temp[i]
 		temp[indx[-1]] = value
 
@@ -140,21 +143,20 @@ if __name__ == '__main__':
 	myLexer.build()
 	myParser = RheeParser()
 	myParser.build(myLexer)
-	ast = myParser.test(u'''क = ४
-यदि क == ख छ भए 
+	ast = myParser.test(u'''
+क = ७
+क = क + ७
+क += ७
 क लेख
-अथवा क == ख छैन भ
-ख लेख
-दिय
-		''', myLexer)
+	''', myLexer)
 
-	print ast
+	# print ast
 
 	myInterpreter = RheeInterpreter()
 	myInterpreter.interpret(ast)
 
-	import json
-	print json.dumps(ast)
+	# import json
+	# print json.dumps(ast)
 
 	# from TestSet import lextest
 

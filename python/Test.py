@@ -59,19 +59,17 @@ program = u'''
 क लेख
 '''#4
 
-program = u'''
-क = ३
-सबै ख = १ देखि ९ 
-	क += १
-	यदि क==५ भए
-		अर्को
-	अथवा क ==७ भए
-		बाहिर
-	दिय
-	क लेख
-	
-बैस
-'''
+# program = u'''
+# क = [३,४,५]
+# क[२] + ७ लेख
+# शुन्य + "अक्षर" लेख
+# "unicode" + क[२] लेख
+# 'uni' + 'code' लेख
+# //'uni' - 'code' लेख
+# [४५,५३,३२,'this'] + [३,४,५,'this'] लेख
+# [४५,५३,३२,'this'] * [३,४,५,'this'] लेख
+
+# '''
 
 myLexer.test(program)
 myParser = RheeParser()
@@ -104,7 +102,8 @@ myInterpreter.interpret(ast)
 # print b3
 
 
-
+# maps = {int:'test'}
+# print maps[type(7)]
 # print 4%3
 # print 4^4
 # print pow(4,2)
@@ -119,3 +118,21 @@ myInterpreter.interpret(ast)
 # 	# print i
 # 	print i + "\t" +str(myInterpreter.num_mapper(lextest[i]))
 # @TODO infinite recursion problem
+
+
+# print u'क'>u'ख'
+
+import RheeTypeError
+def testTyrror():
+	test = RheeTypeError()
+	print(test.e_print("43"))
+	print(test.e_print(43))
+	print(test.e_print(43e-3))
+	print(test.e_print(43e49))
+	print(test.e_print(None))
+	print(test.e_print(True))
+	print(test.e_print(False))
+	print(test.e_print(["43", 43, True, False, [None, 4e67, True]]))
+	print(test.e_print(('function', 'fparams', 'fbody', 'fenv', 'fname')))
+	print(test.e_print(('object', 'oenv', 'cname')))
+	print(test.e_print(('class', 'cenv', 'cname')))
