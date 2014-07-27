@@ -1,4 +1,18 @@
 #encoding=UTF8
+# def test(help):
+# 	return help[0]
+
+# mapper ={
+# 	'tes' : lambda x: x[0]
+# }
+
+# print mapper['tes']([3,4])
+
+# i = [4,5]
+
+# for i[0] in xrange(6):
+# 	pass
+# print i[0] 
 
 from Lexer import RheeLexer
 
@@ -52,24 +66,26 @@ program = u'''
 	प् लेख
 	'''
 
-program = u'''
-क = [३,४,५,[३,२,'test']]
-क[क[३][१]*२/४] लेख
-क[२] = ६७
-क लेख
-'''#4
-
 # program = u'''
-# क = [३,४,५]
-# क[२] + ७ लेख
-# शुन्य + "अक्षर" लेख
-# "unicode" + क[२] लेख
-# 'uni' + 'code' लेख
-# //'uni' - 'code' लेख
-# [४५,५३,३२,'this'] + [३,४,५,'this'] लेख
-# [४५,५३,३२,'this'] * [३,४,५,'this'] लेख
+# क = [३,४,५,[३,२,'test']]
+# क लेख
+# //क[क[३][१]*२/४] लेख
+# //क[२] = ६७
+# //क लेख
+# '''#4
 
-# '''
+program = u'''
+क = [३,४,५]
+क लेख
+क[२] + ७ लेख
+//शुन्य + "अक्षर" लेख
+"unicode" + क[२] लेख
+'uni' + 'code' लेख
+//'uni' - 'code' लेख
+[४५,५३,३२,'this'] + [३,४,५,'this'] लेख
+[४५,५३,३२,'this'] * [३,४,५,'this'] लेख
+
+'''
 
 myLexer.test(program)
 myParser = RheeParser()
@@ -119,6 +135,17 @@ myInterpreter.interpret(ast)
 # 	print i + "\t" +str(myInterpreter.num_mapper(lextest[i]))
 # @TODO infinite recursion problem
 
+# def multi(test, teste):
+# 	return (teste, test)
+
+# test = 34
+# teste = 3
+
+# test,teste = multi(test, teste)
+# print test, teste
+
+# lhs,rhs = 2,3
+# print lhs,rhs
 
 # print u'क'>u'ख'
 
@@ -136,3 +163,4 @@ def testTyrror():
 	print(test.e_print(('function', 'fparams', 'fbody', 'fenv', 'fname')))
 	print(test.e_print(('object', 'oenv', 'cname')))
 	print(test.e_print(('class', 'cenv', 'cname')))
+

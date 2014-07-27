@@ -37,7 +37,7 @@ class RheeInterpreter(UnitInterpreter):
 			elif stmt == 'false':
 				return False
 			elif stmt == 'array':
-				return [self.interpret(t) for t in tree[2]]
+				return ("array", [self.interpret(t) for t in tree[2]])
 			elif stmt == 'identifier':
 				return self.env_lookup(tree[2], env)
 			elif stmt == 'functioncall':
@@ -102,12 +102,14 @@ class RheeInterpreter(UnitInterpreter):
 		temp = (env[1])[vname]
 		
 		for i in indx[:-1]:
-			if i>len(temp):
+			if i>len(temp[1]):
 				self.error("Array index out of bound")
 				return
+			if type(temp) != tuple and type(temp) != unicode :
+				self.error("Cannot access non array element with index")
 
-			temp = temp[i]
-		temp[indx[-1]] = value
+			temp = temp[1][i]
+		temp[1][indx[-1]] = value
 
 	def env_lookup(self, vname, env, depth=-1):
 		if vname in env[1]:

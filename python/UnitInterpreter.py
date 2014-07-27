@@ -43,6 +43,9 @@ class UnitInterpreter(RheeTypeError):
 
 		self.e_arithop(lhs, operator, rhs)
 		if type(lhs) in [str, unicode]:	rhs = str(rhs)
+		
+		if type(lhs) is tuple:
+			return ("array",lhs[1]+rhs[1])
 
 		if operator == '+':
 			return lhs + rhs
@@ -83,11 +86,13 @@ class UnitInterpreter(RheeTypeError):
 
 	def i_negation(self, tree, env):
 		operator = tree[2]
+		boolexp = self.interpret(tree[3], env)
+		boolexp = self.e_boolean(boolexp)
 
 		if operator == u'छ':
-			return self.interpret(tree[3], env)
+			return boolexp
 		elif operator == u'छैन':
-			return not self.interpret(tree[3], env)
+			return not boolexp
 
 	def i_return(self, tree, env):
 		value = self.interpret(tree[1], env)
@@ -131,10 +136,8 @@ class UnitInterpreter(RheeTypeError):
 		post = self.interpret(tree[4], env)
 		step = self.interpret(tree[5], env)
 
-		if not self.e_forloop(pre, post, step):
-			self.error("expressions in for loop should be numbers " + str(tree[1]))
-			return
-
+		self.e_forloop(pre, post, step)
+		
 		self.add_to_env(env, tree[2], pre)
 
 		while self.env_lookup(tree[2], env) != post:
@@ -286,6 +289,7 @@ class UnitInterpreter(RheeTypeError):
 
 		ident = tree[2]
 		idata = self.env_lookup(ident[2], env)
+		self.e_arraycheck(idata)
 
 		indices = tree[3]
 		start = None
@@ -296,16 +300,19 @@ class UnitInterpreter(RheeTypeError):
 			start 	= self.interpret(item[2], env)
 
 			if (item[0] == 'normal'):
-				self.e_aryref(start, None, len(idata))		# typechecking
+				self.e_aryref(start, None, len(idata[1]))		# typechecking
 
-				idata = idata[start]
+				idata = idata[1][start]
 			else:
 				end  = self.interpret(item[2], env)
 				
-				self.e_aryref(start, end, len(idata))
+				self.e_aryref(start, end, len(idata[1]))
 				
-				idata = idata[start:end]
+				idata = idata[1][start:end]
 
+		if type(idata) is list:
+			# it can be object too!! javascript
+			return ('array', idata)
 		return idata
 
 	def i_aryassign(self, tree, env, assign):
@@ -313,17 +320,17 @@ class UnitInterpreter(RheeTypeError):
 
 		indices = tree[3]
 		tinx  	= []
-		mini	= None
+		atom	= None
 
 		for item in indices:
 			if item[0] == 'arrayslice':
 				self.error("Array slice assignment not supported yet")
 				return
 
-			mini = self.interpret(item[2],env)
-			self.e_aryassign(mini)					# typechecking
+			atom = self.interpret(item[2],env)
+			self.e_aryassign(atom)					# typechecking
 				
-			tinx += [mini]
+			tinx += [atom]
 
 		self.env_update_array(env, ident[2], tinx, assign) 
 		return True
