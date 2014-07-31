@@ -1,7 +1,7 @@
 #encoding=utf8
 
 from UnitInterpreter import UnitInterpreter
-from UnitInterpreter import ContinueException, BreakException
+from UnitInterpreter import ContinueException, BreakException, TracebackException
 
 class RheeInterpreter(UnitInterpreter):
 	"""docstring for RheeInterpreter"""

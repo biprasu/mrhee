@@ -224,6 +224,8 @@ class UnitInterpreter(RheeTypeError):
 			self.interpret(fbody, newenv)
 		except ReturnException as e:
 			return e.returnval
+		except TracebackException as te:
+			self.error("traceback",lineno,tb=True)
 
 	def i_fcall_objinit(self, classrep, args , env, lineno):
 		cenv = classrep[1]
@@ -249,6 +251,8 @@ class UnitInterpreter(RheeTypeError):
 				self.interpret(fbody, objenv)
 			except ReturnException as e:
 				self.display("Returned value is of no value")
+			except TracebackException as te:
+				self.error("traceback",lineno,tb=True)
 		
 		ovalue = ('object', objenv, classrep[2])
 		return ovalue
@@ -262,11 +266,14 @@ class UnitInterpreter(RheeTypeError):
 			retobj = self.env_lookup(item[2], tempenv, depth=-1)
 		elif item[0] == 'functioncall':
 			retobj = self.i_functioncall(item, tempenv, depth=-1)
+		elif item[0] == 'aryreference':
+			retobj = self.i_aryreference(item, tempenv)
+
 		
 		for item in tree[2][1:]:		# remaining chain
 			if type(retobj) is tuple:
 				if retobj[0] != 'object':
-					self.display('Error!! ' + retobj[0] + 'cannot be referenced')
+					self.error(retobj[0] + 'cannot be referenced')
 					exit(-1)
 
 				tempenv = retobj[1]
@@ -376,7 +383,7 @@ class UnitInterpreter(RheeTypeError):
 			if char in self.map_num:
 				ascii += self.map_num[char]
 			else:
-				self.report_error('Can`t parse the number '+num);
+				self.error('Can`t parse the number '+num);
 				return False
 		if ascii.find('.') == ascii.find('e') == ascii.find('E') == -1:
 			return int(ascii, base)
@@ -393,8 +400,12 @@ class UnitInterpreter(RheeTypeError):
 		return raw_input(content)	# always returns a string version
 	
 
-	def error(self, msg):
-		print "ERROR!! " + msg;
+	def error(self, msg, lineno=None, tb=None):
+		if not tb:
+			print "ERROR!! " + msg + " in line number "+ str(lineno);
+		print "SamasyaSuchak: " + str(lineno)
+
+		raise TracebackException("Trace it Back")
 		exit(0)
 		# pass
 
@@ -415,6 +426,10 @@ class ContinueException(Exception):
 		Exception.__init__(self, message)
 
 class BreakException(Exception):
+	def __init__(self, message):
+		Exception.__init__(self, message)
+
+class TracebackException(Exception):
 	def __init__(self, message):
 		Exception.__init__(self, message)
 		

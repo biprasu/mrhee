@@ -75,16 +75,11 @@ program = u'''
 # '''#4
 
 program = u'''
-क = [३,४,५]
-क लेख
-क[२] + ७ लेख
-//शुन्य + "अक्षर" लेख
-"unicode" + क[२] लेख
-'uni' + 'code' लेख
-//'uni' - 'code' लेख
-[४५,५३,३२,'this'] + [३,४,५,'this'] लेख
-[४५,५३,३२,'this'] * [३,४,५,'this'] लेख
-
+काम टेस्ट(क)
+	क लेख
+मका
+प = [२,३,४,५]
+टेस्ट(प[३])
 '''
 
 myLexer.test(program)
@@ -94,10 +89,14 @@ ast = myParser.test(program, myLexer)
 
 # interpreter zone
 from interpret import RheeInterpreter
+from UnitInterpreter import TracebackException
 
-myInterpreter = RheeInterpreter()
-myInterpreter.interpret(ast)
 
+try:
+	myInterpreter = RheeInterpreter()
+	myInterpreter.interpret(ast)
+except TracebackException as e:
+	print e.message
 # print type(4) is tuple
 # print myInterpreter.environment
 

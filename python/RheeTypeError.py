@@ -60,8 +60,8 @@ class RheeTypeError(object):
 		self.error("Expressions in for loop should be numbers ")
 		return False
 
-	def e_arraycheck(arr):
-		if not (get_type(arr) is 'array'):
+	def e_arraycheck(self, arr):
+		if not (self.get_type(arr) is 'array'):
 			self.error("Array reference only allowed in array not in "+ get_type(arr))
 		return True
 	def e_aryref(self, start, end, arlen):
