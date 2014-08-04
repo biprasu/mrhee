@@ -95,10 +95,13 @@ class RheeInterpreter(UnitInterpreter):
 
 	def add_to_env(self, env, vname, value):
 		(env[1])[vname] = value
-	def env_update(self, env, vname, value):	# @TODO get detail about the variable scope management
+	def env_update(self, env, vname, value, depth=-1):	# @TODO get detail about the variable scope management
 		(env[1])[vname] = value
 		return True
 	def env_update_array(self, env, vname, indx, value):
+		if not vname in env[1]:
+			self.error("Null variable cannot be indexed")
+			
 		temp = (env[1])[vname]
 		
 		for i in indx[:-1]:

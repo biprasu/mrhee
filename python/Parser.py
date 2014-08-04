@@ -14,6 +14,7 @@ class RheeParser:
 	('left', 'TIMES', 'DIVIDE'),
 	('left', 'MODULUS', 'POWER'),
 	('right', 'UMINUS'),
+	('left', 'DOT'),
 	)
 
 	def p_begin(self, p):
@@ -71,15 +72,14 @@ class RheeParser:
 		'input : variableExpr LEU'
 		p[0] = ('input', p.lineno(2), p[1])
 	def p_incremental(self, p):
-		'''incremental : IDENTIFIER AI expr
-						| IDENTIFIER SI expr
-						| IDENTIFIER MI expr
-						| IDENTIFIER DI expr
+		'''incremental : reference AI expr
+						| reference SI expr
+						| reference MI expr
+						| reference DI expr
 		'''
-		p[0] = ('assign', p.lineno(1), 
-					('identifier', p.lineno(1), p[1]), 
+		p[0] = ('assign', p.lineno(1), p[1],
 					[('arithop', p.lineno(1), p[2][0], 
-						[('identifier', p.lineno(1), p[1])], [p[3]])])
+						[p[1]], [p[3]])])
 		# p[0] = ('increment', p.lineno(1), p[2], p[1], [p[3]])
 	def p_return(self, p):
 		'return : expr PATHAU'
@@ -133,10 +133,10 @@ class RheeParser:
 
 	# for loop
 	def p_forloop_default(self, p):
-		'''forloop : SABAI IDENTIFIER ASSIGNMENT expr DEKHI expr NEWLINE program BAISA'''
+		'''forloop : SABAI reference ASSIGNMENT expr DEKHI expr NEWLINE program BAISA'''
 		p[0] = ('forloop', p.lineno(1), p[2], [p[4]], [p[6]], [("decimal", p.lineno(1), u'१')], p[8])
 	def p_forloop_increment(self, p):
-		'''forloop : SABAI IDENTIFIER ASSIGNMENT expr DEKHI expr COLON expr NEWLINE program BAISA'''
+		'''forloop : SABAI reference ASSIGNMENT expr DEKHI expr COLON expr NEWLINE program BAISA'''
 		p[0] = ('forloop', p.lineno(1), p[2], [p[4]], [p[6]], [p[8]], p[10])
 
 	# while loop
@@ -245,8 +245,7 @@ class RheeParser:
 		'''
 		p[0] = p[1]
 	def p_reference_nested(self, p):
-		'''reference : reference DOT identifier
-						| reference DOT functioncall
+		'''reference : reference DOT reference
 		'''
 		p[0] = ('reference', p.lineno(1), [p[1]] + [p[3]])
 

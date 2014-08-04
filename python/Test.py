@@ -75,11 +75,9 @@ program = u'''
 # '''#4
 
 program = u'''
-काम टेस्ट(क)
-	क लेख
-मका
-प = [२,३,४,५]
-टेस्ट(प[३])
+१२>९ लेख
+(१२>"९") लेख
+"टेस्ट">'केट' लेख
 '''
 
 myLexer.test(program)
@@ -148,9 +146,9 @@ except TracebackException as e:
 
 # print u'क'>u'ख'
 
-import RheeTypeError
+import RheeTypeCheck
 def testTyrror():
-	test = RheeTypeError()
+	test = RheeTypeCheck()
 	print(test.e_print("43"))
 	print(test.e_print(43))
 	print(test.e_print(43e-3))

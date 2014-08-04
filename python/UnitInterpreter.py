@@ -1,17 +1,17 @@
 #encoding=utf8
-from RheeTypeError import RheeTypeError
-class UnitInterpreter(RheeTypeError):
+from RheeTypeCheck import RheeTypeCheck
+class UnitInterpreter(RheeTypeCheck):
 
 	def i_assign(self, tree, env):
 		refernc = tree[2]
 
 		if (refernc[0] == 'functioncall'):
-			self.error("Function can not be assigned")
+			self.error("Function can not be assigned", tree[1])
 			return
 		elif (refernc[0] == 'identifier'):
 			self.add_to_env(env, refernc[2], self.interpret(tree[3], env))
 		elif ( refernc[0] == 'reference'):
-			self.i_reference(refernc, env, self.interpret(tree[3], env))
+			self.i_reference(refernc, env, self.interpret(tree[3], env), True)
 		elif (refernc[0] == 'aryreference'):
 			self.i_aryassign(refernc, env, self.interpret(tree[3], env))
 		
@@ -41,7 +41,7 @@ class UnitInterpreter(RheeTypeError):
 		lhs = self.interpret(tree[3], env)
 		rhs = self.interpret(tree[4], env)
 
-		self.e_arithop(lhs, operator, rhs)
+		self.e_arithop(lhs, operator, rhs, tree[1])
 		if type(lhs) in [str, unicode]:	rhs = str(rhs)
 		
 		if type(lhs) is tuple:
@@ -66,6 +66,10 @@ class UnitInterpreter(RheeTypeError):
 
 		lhs = self.interpret(tree[3], env)
 		rhs = self.interpret(tree[4], env)
+
+		if (not self.e_binop(lhs, rhs)):
+			lhs = self.e_print(lhs)
+			rhs = self.e_print(rhs)
 
 		if operator == '>':
 			return lhs>rhs
@@ -132,15 +136,16 @@ class UnitInterpreter(RheeTypeError):
 
 
 	def i_forloop(self, tree, env):
-		pre = self.interpret(tree[3], env)
-		post = self.interpret(tree[4], env)
-		step = self.interpret(tree[5], env)
+		pre 	= self.interpret(tree[3], env)
+		post 	= self.interpret(tree[4], env)
+		step 	= self.interpret(tree[5], env)
+		refDummy = ("bogus",tree[1],[tree[2],]) if tree[2][0] != 'reference' else tree[2]			# Create ast like reference <laziness>
 
-		self.e_forloop(pre, post, step)
+		self.e_forloop(pre, post, step, tree[1])
 		
-		self.add_to_env(env, tree[2], pre)
+		self.i_reference(refDummy, env, pre, True)
 
-		while self.env_lookup(tree[2], env) != post:
+		while self.i_reference(refDummy, env) != post:
 			try:
 				self.interpret(tree[6], env)
 			except BreakException as e:
@@ -148,8 +153,8 @@ class UnitInterpreter(RheeTypeError):
 			except ContinueException as e1:
 				pass
 			finally:
-				pre = self.env_lookup(tree[2], env) + step
-				self.env_update(env, tree[2], pre)
+				pre = self.i_reference(refDummy, env) + step
+				self.i_reference(refDummy, env, pre, True)
 
 	def i_whileloop(self, tree, env):
 		expr = self.interpret(tree[2], env)
@@ -168,7 +173,7 @@ class UnitInterpreter(RheeTypeError):
 		iter = self.interpret(tree[2], env)
 
 		if not (type(iter) in [int, float]):
-			self.error("Choti iteration only supports integers")
+			self.error("Choti iteration only supports integers", tree[1])
 
 		for i in xrange(iter):
 			try:
@@ -212,7 +217,7 @@ class UnitInterpreter(RheeTypeError):
 		fenv	= fvalue[3]
 
 		if len(args) != len(fparams):
-			self.error('Invalid number of params to the function ' + str(lineno))
+			self.error('Invalid number of params to the function ', lineno)
 			return
 
 		newenv = (fenv, {})
@@ -232,7 +237,7 @@ class UnitInterpreter(RheeTypeError):
 
 		fvalue = self.env_lookup(u'रचना', cenv, depth=1)
 		
-		objenv = (cenv, {})
+		objenv = self.createObjEnv(cenv)
 
 		if fvalue != 'undefined' and fvalue:	# if class has a constructor
 			fparams = fvalue[1]
@@ -258,22 +263,44 @@ class UnitInterpreter(RheeTypeError):
 		return ovalue
 		# self.add_to_env(env, )
 
-	def i_reference(self, tree, env, assign=None):
+	def createObjEnv(self, cenv):
+		dc = {}
+		value = None
+
+		for key in cenv[1]:
+			value = cenv[1][key]
+
+			if self.get_type(value) in ["num", "string", "bool", "undefined", "array", "object"]:
+				dc[key] = value
+
+		return (cenv, dc)
+
+	def i_reference(self, tree, env, assign=None, aflag=False):
 		tempenv = env
 
 		item = tree[2][0]			# first item in chain
+		numChain = len(tree[2])
+
 		if item[0] == 'identifier': 				# search upto global scope
+			if (numChain == 1 and aflag):
+				self.env_update(tempenv, item[2], assign)
 			retobj = self.env_lookup(item[2], tempenv, depth=-1)
+		
 		elif item[0] == 'functioncall':
+			if (aflag):
+				self.error("Chaining up with function to assign doesn't make sense.", tree[1])
 			retobj = self.i_functioncall(item, tempenv, depth=-1)
+		
 		elif item[0] == 'aryreference':
+			if (aflag and numChain == 1 ):
+				self.i_aryassign(item, tempenv, assign)
 			retobj = self.i_aryreference(item, tempenv)
 
 		
 		for item in tree[2][1:]:		# remaining chain
 			if type(retobj) is tuple:
 				if retobj[0] != 'object':
-					self.error(retobj[0] + 'cannot be referenced')
+					self.error(retobj[0] + 'cannot be referenced', tree[1])
 					exit(-1)
 
 				tempenv = retobj[1]
@@ -281,22 +308,29 @@ class UnitInterpreter(RheeTypeError):
 				tempenv = (None, {})
 
 			if item[0] == 'identifier': 				# search upto class level
-				if (assign and item == tree[2][-1]):
+				if (aflag and item == tree[2][-1]):
 					# if assign and is last item
 					self.env_update(tempenv, item[2], assign)
 				retobj = self.env_lookup(item[2], tempenv, depth=2)
+			
 			elif item[0] == 'functioncall':
-				if (assign):
-					self.error("Chaining up with function to assign doesn't make sense.")
+				if (aflag):
+					self.error("Chaining up with function to assign doesn't make sense.", tree[1])
 				retobj = self.i_functioncall(item, tempenv, depth=2, globalenv=env)
+			
+			elif item[0] == 'aryreference':
+				if (aflag and item == tree[2][-1]):
+					self.i_aryassign(item, tempenv, assign)
+				retobj = self.i_aryreference(item, tempenv, depth=2)
+
 		
 		return retobj
 
-	def i_aryreference(self, tree, env):
+	def i_aryreference(self, tree, env, depth=-1):
 
 		ident = tree[2]
-		idata = self.env_lookup(ident[2], env)
-		self.e_arraycheck(idata)
+		idata = self.env_lookup(ident[2], env, depth)
+		self.e_arraycheck(idata, tree[1])
 
 		indices = tree[3]
 		start = None
@@ -307,13 +341,13 @@ class UnitInterpreter(RheeTypeError):
 			start 	= self.interpret(item[2], env)
 
 			if (item[0] == 'normal'):
-				self.e_aryref(start, None, len(idata[1]))		# typechecking
+				self.e_aryref(start, None, len(idata[1]), tree[1])		# typechecking
 
 				idata = idata[1][start]
 			else:
 				end  = self.interpret(item[2], env)
 				
-				self.e_aryref(start, end, len(idata[1]))
+				self.e_aryref(start, end, len(idata[1]), tree[1])
 				
 				idata = idata[1][start:end]
 
@@ -331,11 +365,11 @@ class UnitInterpreter(RheeTypeError):
 
 		for item in indices:
 			if item[0] == 'arrayslice':
-				self.error("Array slice assignment not supported yet")
+				self.error("Array slice assignment not supported yet", tree[1])
 				return
 
 			atom = self.interpret(item[2],env)
-			self.e_aryassign(atom)					# typechecking
+			self.e_aryassign(atom, tree[1])					# typechecking
 				
 			tinx += [atom]
 
@@ -383,7 +417,7 @@ class UnitInterpreter(RheeTypeError):
 			if char in self.map_num:
 				ascii += self.map_num[char]
 			else:
-				self.error('Can`t parse the number '+num);
+				self.error('Can`t parse the number '+num, );
 				return False
 		if ascii.find('.') == ascii.find('e') == ascii.find('E') == -1:
 			return int(ascii, base)
