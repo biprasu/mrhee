@@ -1,5 +1,7 @@
 #encoding=utf8
 from RheeTypeCheck import RheeTypeCheck
+from InterpreterLibrary import checklibrary, call
+
 class UnitInterpreter(RheeTypeCheck):
 
 	def i_assign(self, tree, env):
@@ -198,6 +200,10 @@ class UnitInterpreter(RheeTypeCheck):
 		fvalue = self.env_lookup(fname, env, depth)
 
 		if fvalue == 'undefined':
+			if checklibrary(fname):
+				call(fname, args, env)
+				return
+
 			self.display('Reference to undefined function!!')
 			return
 
