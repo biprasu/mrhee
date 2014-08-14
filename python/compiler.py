@@ -1,7 +1,5 @@
 #encoding=utf8
 
-from UnitInterpreter import  UnitInterpreter
-
 map_num = {u'\u0966':'0', u'\u0967':'1', u'\u0968':'2', u'\u0969':'3',
             u'\u096a':'4', u'\u096b':'5', u'\u096c':'6', u'\u096d':'7',
             u'\u096e':'8' ,u'\u096f':'9'
@@ -19,7 +17,7 @@ def unicode_to_str(uni):
     return temp
 
 
-class RheeCompiler(UnitInterpreter):
+class RheeCompiler:
     """docstring for RheeCompiler"""
 
     tab = ''
@@ -243,7 +241,7 @@ if __name__ == '__main__':
     myParser.build(myLexer)
 
     ast = myParser.test(u'''
-
+क लेख
 यदि क == ख छ भए
 क लेख
 अथवा क == ख छैन भए
