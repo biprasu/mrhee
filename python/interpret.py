@@ -2,8 +2,9 @@
 
 from UnitInterpreter import UnitInterpreter
 from UnitInterpreter import ContinueException, BreakException, TracebackException
+from InterpreterLibrary import InterpreterLibs
 
-class RheeInterpreter(UnitInterpreter):
+class RheeInterpreter(UnitInterpreter, InterpreterLibs):
 	"""docstring for RheeInterpreter"""
 
 	environment = (None,{})

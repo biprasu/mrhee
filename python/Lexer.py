@@ -144,6 +144,11 @@ class RheeLexer:
 		token.lexer.lineno += token.value.count('\n')
 		return token
 
+	def t_MATHFUNC(self, token):
+		ur'(?:sin)|(?:cos)|(?:tan)|(?:asin)|(?:acos)|(?:atan)|(?:log)|(?:alog)'
+		token.type = "IDENTIFIER"
+		return token
+
 
 	def t_NEWLINE(self, token):
 		ur'\n+'

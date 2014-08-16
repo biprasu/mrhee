@@ -52,6 +52,16 @@ class RheeParser:
 					| return
 					| continue
 					| break
+					| filewriteln
+					| filewrite
+					| fileread
+					| fileclose
+					| graphicshow
+					| graphichide
+					| graphicclose
+					| graphicupdate
+					| graphicclear
+					| graphicdraw
 		'''
 		p[0] = p[1]
 
@@ -143,7 +153,6 @@ class RheeParser:
 	def p_whileloop(self, p):
 		'whileloop : JABA SAMMA expr NEWLINE program BAJA'
 		p[0] = ('whileloop', p.lineno(1), [p[3]], p[5])
-
 	# repeat loop
 	def p_repeatloop(self, p):
 		'repeatloop : expr CHOTI NEWLINE program TICHO'
@@ -156,6 +165,39 @@ class RheeParser:
 	def p_class(self, p):
 		'class : KHAKA IDENTIFIER NEWLINE program KAKHA'
 		p[0] = ('classdef', p.lineno(1), p[2], p[4])
+
+	def p_filewriteln(self, p):
+		'filewriteln : reference MA variableExpr LEKHA'
+		p[0] = ("expression", p.lineno(1),[("functioncall", p.lineno(1), u"__फाइललेखलाइन__", [[p[1]]]+p[3])])
+		# expression is essential not to terminate the program
+	def p_filewrite(self, p):
+		'filewrite : reference MA variableExpr LEKHA SEMICOLON'
+		p[0] = ("expression", p.lineno(1),[("functioncall", p.lineno(1), u"__फाइललेख__", [[p[1]]]+p[3])])
+	def p_fileread(self, p):
+		'fileread : reference BATA reference LEU'
+		p[0] = ('assign', p.lineno(1),p[3],[("functioncall", p.lineno(1), u'__फाइलपढ__', [[p[1]]])])
+	def p_fileclose(self, p):
+		'fileclose : reference BANDAGARA'
+		p[0] = ("expression", p.lineno(1),[("functioncall", p.lineno(1), u'__बन्दगर__', [[p[1]]])])
+
+	def p_graphicshow(self, p):
+		'graphicshow : reference DEKHAU'
+		p[0] = ("expression", p.lineno(1),[('functioncall', p.lineno(1), u'__देखाउ__', [[p[1]]])])
+	def p_graphichide(self, p):
+		'graphichide : reference LUKAU'
+		p[0] = ("expression", p.lineno(1),[('functioncall', p.lineno(1), u'__लुकाउ__', [[p[1]]])])
+	def p_graphicclose(self, p):
+		'graphicclose : reference HATAU'
+		p[0] = ("expression", p.lineno(1),[('functioncall', p.lineno(1), u'__हटाउ__', [[p[1]]])])
+	def p_graphicupdate(self, p):
+		'graphicupdate : reference BANAU'
+		p[0] = ("expression", p.lineno(1),[('functioncall', p.lineno(1), u'__बनाउ__', [[p[1]]])])
+	def p_graphicclear(self, p):
+		'graphicclear : reference METAU'
+		p[0] = ("expression", p.lineno(1),[('functioncall', p.lineno(1), u'__मेटाउ__', [[p[1]]])])
+	def p_graphicdraw(self, p):
+		'graphicdraw : reference MA string KORA variableExpr'
+		p[0] = ("expression", p.lineno(1),[('functioncall', p.lineno(1), u'__कोर__', [[p[1]],[p[3]]]+p[5])])
 
 	# Helping rules to statement rules
 	def p_variableExpr_multi(self, p):
@@ -402,7 +444,4 @@ if __name__ == '__main__':
 	myParser = RheeParser()
 	myParser.build(myLexer)
 	myParser.test(u'''
-यक = *ख
-यक = ख
-यक *= ख
-		''', myLexer)
+यक()		''', myLexer)
