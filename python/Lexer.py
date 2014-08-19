@@ -181,6 +181,11 @@ class RheeLexer:
 	def get_tokens(self): 	return self.tokens
 	def get_lexer(self):	return self.lexer
 
-
-
-# @TODO octal and hexa check in parser
+if __name__ == '__main__':
+	m = RheeLexer()
+	m.build()
+	m.test(u'''
+	क = ४
+	क += ४
+	क लेख
+		''')
