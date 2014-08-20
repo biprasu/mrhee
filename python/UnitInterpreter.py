@@ -101,7 +101,7 @@ class UnitInterpreter(RheeTypeCheck):
 			return not boolexp
 
 	def i_return(self, tree, env):
-		value = self.interpret(tree[1], env)
+		value = self.interpret(tree[2], env)
 		raise ReturnException('functionReturn', value)
 
 

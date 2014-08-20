@@ -41,11 +41,6 @@ tokens = []
 from Lexer import tokens
 
 program = u'''
-काम रचना()
-			क = ५
-			ग = ७
-		मका
-	क = ४
 	खाका वस्तु
 		क = ४
 		ख = ९
@@ -64,11 +59,7 @@ program = u'''
 	काखा
 	त = वस्तु()
 	त.फ़क्तोरिअल्(५) लेख
-	त.क = ७० 
-	त.क लेख
-	प् = [३,४,५]
-	प्[२] = ९०
-	प् लेख
+	त को फ़क्तोरिअल्(५) लेख
 	'''
 
 # program = u'''
@@ -124,17 +115,17 @@ myLexer.build()
 myParser = RheeParser()
 myParser.build(myLexer)
 ast = myParser.test(program, myLexer)
-print ast
+# print ast
 # interpreter zone
-# from interpret import RheeInterpreter
-# from UnitInterpreter import TracebackException
+from interpret import RheeInterpreter
+from UnitInterpreter import TracebackException
 
 
-# try:
-# 	myInterpreter = RheeInterpreter()
-# 	myInterpreter.interpret(ast)
-# except TracebackException as e:
-# 	print e.message
+try:
+	myInterpreter = RheeInterpreter()
+	myInterpreter.interpret(ast)
+except TracebackException as e:
+	print e.message
 
 
 # print type(4) is tuple

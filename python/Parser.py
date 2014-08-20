@@ -288,6 +288,7 @@ class RheeParser:
 		p[0] = p[1]
 	def p_reference_nested(self, p):
 		'''reference : reference DOT reference
+					|  reference KO reference
 		'''
 		p[0] = ('reference', p.lineno(2), [p[1]] + [p[3]])
 
