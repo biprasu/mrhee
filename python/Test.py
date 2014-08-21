@@ -16,8 +16,7 @@
 
 from Lexer import RheeLexer
 
-myLexer = RheeLexer()
-myLexer.build()
+
 # for item in testset:
 # 	myLexer.test(testset[item])
 # 	print item
@@ -32,6 +31,8 @@ myLexer.build()
 # print int('0x34')
 # print float('3.4e-3')
 
+# a = {'sd':3}
+# print a.get('sd', "test")
 # exit(0)
 
 # Parser Zone
@@ -40,7 +41,6 @@ tokens = []
 from Lexer import tokens
 
 program = u'''
-	क = ४
 	खाका वस्तु
 		क = ४
 		ख = ९
@@ -59,11 +59,7 @@ program = u'''
 	काखा
 	त = वस्तु()
 	त.फ़क्तोरिअल्(५) लेख
-	त.क = ७० 
-	त.क लेख
-	प् = [३,४,५]
-	प्[२] = ९०
-	प् लेख
+	त को फ़क्तोरिअल्(५) लेख
 	'''
 
 # program = u'''
@@ -74,41 +70,52 @@ program = u'''
 # //क लेख
 # '''#4
 
-program = u'''
-खाका टेस्ट
-	क = [४,५,६,७,८]
-	काम रचना()
-	मका
-	काम खाना()
-		"khana" लेख
-	मका
-काखा
-काम हेल्लो()
-	"hello" लेख
-मका
+# program = u'''क = चित्र("ेख", ७०, ७०)
+# क लुकाउ
+# क देखाउ
+# क बनाउ
+# क मेटाउ
+# क मा 'गोलो' कोर ७,७,७,४,'हरियो','हरियो'
+# क मा 'कोठा' कोर ७,७,४४,४,४,'हरियो','हरियो'
+# क मा 'लाइन' कोर ७,७,७,४४,४,'हरियो'
+# क मा 'डट' कोर ७,७,७,'हरियो'
+# क मा 'शब्द' कोर ७,७,"हरि", ७, 'हरियो'
+# जब सम्म साचो छ
+# 	ख = बटन()
+# 	यदि ख == ३८ भए   //अप बटन
+# 	   क मेटाउ
+# 	   क मा 'डट' कोर १०,१०,३, "रातो"
+# 	 अथवा ख == ४० भए  //डाउन बटन
+# 	   क मेटाउ
+# 	   क मा 'लाइन' कोर १०,१०,१००,१००, ३, "रातो"
+# 	 अथवा ख == ३७ भए  //लेफ्ट बटन
+# 	   क मेटाउ
+# 	   क मा 'कोठा' कोर १०,१०,१००,१००, ३, "रातो", "निलो"
+# 	 अथवा ख == ३९ भए  //राइट बटन
+# 	   क मेटाउ
+# 	   क मा 'गोलो 'कोर १००,१००,२०,    ३, "रातो", "निलो"
+# 	  अथवा ख == ८३ भए // s बटन
+# 	   बाहिर
+# 	 दिय
+# 	 क बनाउ
+# बज	
+# क हटाउ
+# '''
+# program = u'''
+# क = ४
+# क += ४
+# क लेख
+# '''
 
-त = टेस्ट()
-प = [४,५,६,[४,५,त]]
+myLexer = RheeLexer()
+myLexer.build()
+# d evil 
+# myLexer.test(program)
 
-// single reference
-त लेख
-हेल्लो()
-
-//multi reference
-त.खाना()
-त.क[४] लेख
-
-//chain reference can go on forever
-प[३][२].खाना()
-प[३][२].क[४] लेख
-
-'''
-
-myLexer.test(program)
 myParser = RheeParser()
 myParser.build(myLexer)
 ast = myParser.test(program, myLexer)
-
+# print ast
 # interpreter zone
 from interpret import RheeInterpreter
 from UnitInterpreter import TracebackException
@@ -119,6 +126,8 @@ try:
 	myInterpreter.interpret(ast)
 except TracebackException as e:
 	print e.message
+
+
 # print type(4) is tuple
 # print myInterpreter.environment
 
@@ -170,18 +179,18 @@ except TracebackException as e:
 
 # print u'क'>u'ख'
 
-import RheeTypeCheck
-def testTyrror():
-	test = RheeTypeCheck()
-	print(test.e_print("43"))
-	print(test.e_print(43))
-	print(test.e_print(43e-3))
-	print(test.e_print(43e49))
-	print(test.e_print(None))
-	print(test.e_print(True))
-	print(test.e_print(False))
-	print(test.e_print(["43", 43, True, False, [None, 4e67, True]]))
-	print(test.e_print(('function', 'fparams', 'fbody', 'fenv', 'fname')))
-	print(test.e_print(('object', 'oenv', 'cname')))
-	print(test.e_print(('class', 'cenv', 'cname')))
+# import RheeTypeCheck
+# def testTyrror():
+# 	test = RheeTypeCheck()
+# 	print(test.e_print("43"))
+# 	print(test.e_print(43))
+# 	print(test.e_print(43e-3))
+# 	print(test.e_print(43e49))
+# 	print(test.e_print(None))
+# 	print(test.e_print(True))
+# 	print(test.e_print(False))
+# 	print(test.e_print(["43", 43, True, False, [None, 4e67, True]]))
+# 	print(test.e_print(('function', 'fparams', 'fbody', 'fenv', 'fname')))
+# 	print(test.e_print(('object', 'oenv', 'cname')))
+# 	print(test.e_print(('class', 'cenv', 'cname')))
 

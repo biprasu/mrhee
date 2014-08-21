@@ -93,7 +93,7 @@ class RheeParser:
 		# p[0] = ('increment', p.lineno(1), p[2], p[1], [p[3]])
 	def p_return(self, p):
 		'return : expr PATHAU'
-		p[0] = ('return', [p[1]])
+		p[0] = ('return', p.lineno(2), [p[1]])
 
 	def p_continue(self, p):
 		'continue : ARKO'
@@ -168,6 +168,7 @@ class RheeParser:
 
 	def p_filewriteln(self, p):
 		'filewriteln : reference MA variableExpr LEKHA'
+<<<<<<< HEAD
 		p[0] = ("expression", p.lineno(1),[("functioncall", p.lineno(1), u"__फाइललेखलाइन__", [[p[1]]]+p[3])])
 		# expression is essential not to terminate the program
 	def p_filewrite(self, p):
@@ -198,6 +199,38 @@ class RheeParser:
 	def p_graphicdraw(self, p):
 		'graphicdraw : reference MA string KORA variableExpr'
 		p[0] = ("expression", p.lineno(1),[('functioncall', p.lineno(1), u'__कोर__', [[p[1]],[p[3]]]+p[5])])
+=======
+		p[0] = ("expression", p.lineno(2),[("functioncall", p.lineno(1), u"__फाइललेखलाइन__", [[p[1]]]+p[3])])
+		# expression is essential not to terminate the program
+	def p_filewrite(self, p):
+		'filewrite : reference MA variableExpr LEKHA SEMICOLON'
+		p[0] = ("expression", p.lineno(2),[("functioncall", p.lineno(1), u"__फाइललेख__", [[p[1]]]+p[3])])
+	def p_fileread(self, p):
+		'fileread : reference BATA reference LEU'
+		p[0] = ('assign', p.lineno(2),p[3],[("functioncall", p.lineno(1), u'__फाइलपढ__', [[p[1]]])])
+	def p_fileclose(self, p):
+		'fileclose : reference BANDAGARA'
+		p[0] = ("expression", p.lineno(2),[("functioncall", p.lineno(1), u'__बन्दगर__', [[p[1]]])])
+
+	def p_graphicshow(self, p):
+		'graphicshow : reference DEKHAU'
+		p[0] = ("expression", p.lineno(2),[('functioncall', p.lineno(1), u'__देखाउ__', [[p[1]]])])
+	def p_graphichide(self, p):
+		'graphichide : reference LUKAU'
+		p[0] = ("expression", p.lineno(2),[('functioncall', p.lineno(1), u'__लुकाउ__', [[p[1]]])])
+	def p_graphicclose(self, p):
+		'graphicclose : reference HATAU'
+		p[0] = ("expression", p.lineno(2),[('functioncall', p.lineno(1), u'__हटाउ__', [[p[1]]])])
+	def p_graphicupdate(self, p):
+		'graphicupdate : reference BANAU'
+		p[0] = ("expression", p.lineno(2),[('functioncall', p.lineno(1), u'__बनाउ__', [[p[1]]])])
+	def p_graphicclear(self, p):
+		'graphicclear : reference METAU'
+		p[0] = ("expression", p.lineno(2),[('functioncall', p.lineno(1), u'__मेटाउ__', [[p[1]]])])
+	def p_graphicdraw(self, p):
+		'graphicdraw : reference MA string KORA variableExpr'
+		p[0] = ("expression", p.lineno(2),[('functioncall', p.lineno(1), u'__कोर__', [[p[1]],[p[3]]]+p[5])])
+>>>>>>> 96b841c74020d61020857afba43235757948c6a2
 
 	# Helping rules to statement rules
 	def p_variableExpr_multi(self, p):
@@ -288,8 +321,9 @@ class RheeParser:
 		p[0] = p[1]
 	def p_reference_nested(self, p):
 		'''reference : reference DOT reference
+					|  reference KO reference
 		'''
-		p[0] = ('reference', p.lineno(1), [p[1]] + [p[3]])
+		p[0] = ('reference', p.lineno(2), [p[1]] + [p[3]])
 
 	def p_reference_array(self, p):
 		'reference : identifier optindex'
@@ -307,7 +341,11 @@ class RheeParser:
 		p[0] = ('normal', p.lineno(1), [p[1]])
 	def p_aryexpr_slice(self, p):
 		'aryexpr : expr COLON expr'
+<<<<<<< HEAD
 		p[0] = ('arrayslice', p.lineno(1), [p[1]], [p[3]])
+=======
+		p[0] = ('arrayslice', p.lineno(2), [p[1]], [p[3]])
+>>>>>>> 96b841c74020d61020857afba43235757948c6a2
 
 	def p_identifier(self, p):
 		'identifier : IDENTIFIER'

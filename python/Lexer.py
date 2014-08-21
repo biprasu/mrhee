@@ -52,6 +52,8 @@ class RheeLexer:
     u'टिचो' : 'TICHO',
     u'खाका'	: 'KHAKA',
     U'काखा'	: 'KAKHA',
+    
+    u'को'	: 'KO',
 	}
 	tokens  = reserved.values()
 	tokens += ['IDENTIFIER', 'DECIMALINTEGER', 'OCTALINTEGER', 'HEXAINTEGER', 'FLOAT', 'IMAGNUMBER', 'STRING']
@@ -144,6 +146,11 @@ class RheeLexer:
 		token.lexer.lineno += token.value.count('\n')
 		return token
 
+	def t_MATHFUNC(self, token):
+		ur'(?:sin)|(?:cos)|(?:tan)|(?:asin)|(?:acos)|(?:atan)|(?:log)|(?:alog)'
+		token.type = "IDENTIFIER"
+		return token
+
 
 	def t_NEWLINE(self, token):
 		ur'\n+'
@@ -176,6 +183,11 @@ class RheeLexer:
 	def get_tokens(self): 	return self.tokens
 	def get_lexer(self):	return self.lexer
 
-
-
-# @TODO octal and hexa check in parser
+if __name__ == '__main__':
+	m = RheeLexer()
+	m.build()
+	m.test(u'''
+	क = ४
+	क += ४
+	क लेख
+		''')
