@@ -13,7 +13,7 @@ def to_ascii(uni):
 
 def unicode_to_str(uni):
     temp = 'u'
-    for digit in uni:   temp += str(hex(ord(digit)))
+    temp += uni.encode('utf-8').encode('hex')
     return temp
 
 

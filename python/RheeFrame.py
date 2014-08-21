@@ -10,7 +10,9 @@ from compiler import compile_file
 import rhee_keyword
 from RheeUtils import MapBreakPoints
 import re
+import time
 
+from RheeWatch import RheeWatch
 
 if (Platform == '__WXMSW__'):
     import win32api
@@ -118,6 +120,8 @@ class RheeFrame(Frame):
         self.txtPromptStyleArray = ["", ""]
 
         self.DebugActive = False
+        self.Go = False
+
         self.WaitingForDebugInput = False
 
         #Used for homedirectory
@@ -148,12 +152,15 @@ class RheeFrame(Frame):
         else:
             self.SetIcon(Icon((bitmapdirectory + "/drpython.xpm"), BITMAP_TYPE_XPM))
 
+        self.WatchWindow = RheeWatch(self)
+
+
 
         self.bSizer = BoxSizer(VERTICAL)
         self.txtFile = RheeText(self, ID_APP)
         self.txtFile.MarkerDefine(MARKER_LINE,STC_MARK_ARROW | STC_MARK_BACKGROUND,'#FF0000','#00FF00')
         self.txtFile.MarkerSetBackground(MARKER_BREAKPOINT, '#FF0000')
-        self.WriteContinueDebugging = False
+        self.Go = False
 
         self.txtPrompt = RheePrompt(self, ID_APP)
         if (self.txtPromptSize == 100):
@@ -701,6 +708,7 @@ class RheeFrame(Frame):
             self.txtPrompt.SetReadOnly(1)
             self.needToUpdatePos = False
             self.DebugActive = False
+            self.Go = False
 
     def OnExit(self, event):
         self.Close(False)
@@ -774,7 +782,32 @@ class RheeFrame(Frame):
             self.WaitingForDebugInput = False
             self.txtFile.MarkerDeleteAll(MARKER_LINE)
 
+    def ReadImmediateStream(self):
+        istream = self.process.GetInputStream()
+        i = 0
+        while not istream.CanRead(): pass
+        _ = istream.read()
+        print _
+        return _
+
+    def UpdateWatch(self):
+        # return
+        if not self.WaitingForDebugInput: return
+
+        ostream = self.process.GetOutputStream()
+        if self.process.GetInputStream().CanRead(): return
+        ostream.write('dir()\n')
+        varlist = eval(self.ReadImmediateStream().split('\n')[0])[3:]   #Remove the first three variables out
+        vardict = {}
+        for v in varlist:
+            ostream.write('p '+ str(v) + '\n')
+            value = self.ReadImmediateStream().split('\n')[0]
+            vardict[str(v)] = value
+        self.WatchWindow.restart(vardict)
+
+
     def OnIdle(self, event):
+        if not self.Go: return
         stillreadinginput = False
         stillreadingoutput = False
         lineno = 0
@@ -791,13 +824,11 @@ class RheeFrame(Frame):
                         self.WaitingForDebugInput = True
                         if "Breakpoint" in text:
                             lineno = self.pytorhee[int(re.findall('(\d+)$',text)[0])-1]
-                            self.WriteContinueDebugging = False
+
                         #Highlight the currentline
-                        if self.WriteContinueDebugging:
-                            self.WriteDebugString('c\n')
-                            self.WriteContinueDebugging = False
-                        else:
-                            self.txtFile.MarkerAdd(lineno, MARKER_LINE)
+                        self.txtFile.MarkerDeleteAll(MARKER_LINE)
+                        self.txtFile.MarkerAdd(lineno, MARKER_LINE)
+                        self.UpdateWatch()
 
                     elif len(text)>0 and text[0] == '>' or len(text)>=2 and text[:2] == '->':
                         if text[:2]=='->': lineno = int(re.findall('(\d+)$',text)[0])-1
@@ -980,6 +1011,8 @@ class RheeFrame(Frame):
         self.process = None
         self.SetStatusText(" ")
         self.DebugActive = False
+        self.Go = False
+        self.WatchWindow.Show(False)
 
         self.pid = -1
         # self.txtPrompt.SetReadOnly(0)
@@ -1120,6 +1153,7 @@ class RheeFrame(Frame):
         else:
             cmd = pythexec + " -u " + self.pythonargs + " \"" + self.outfile.filename + largs
             self.runcommand((cmd), event)
+        self.Go = True
 
     def OnRunWithDebugger(self, event):
 
@@ -1148,6 +1182,8 @@ class RheeFrame(Frame):
                             event)
 
         self.DebugActive = True
+        self.WatchWindow.Show()
+        self.WatchWindow.restart(None)
 
         #TODO: smth
         self.pytorhee, self.rheetopy = MapBreakPoints(self.breakpoints, self.outfile)
@@ -1159,9 +1195,12 @@ class RheeFrame(Frame):
                 self.process.GetOutputStream().write("break " + str(self.rheetopy[self.breakpoints[x]] + 1) + '\n')
                 x = x + 1
 
-        self.WriteContinueDebugging = True
+        time.sleep(1)
+        print self.ReadImmediateStream()
+        #Continue
+        self.process.GetOutputStream().write('c\n')
 
-
+        self.Go = True
 
 
     def OnSave(self, event):

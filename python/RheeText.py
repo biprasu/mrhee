@@ -35,15 +35,15 @@ class RheeText(StyledTextCtrl):
     def OnModified(self, event):
         if (self.GetModify()):
             if (len(self.GetParent().filename) <= 0):
-                self.GetParent().SetTitle("Rhee - Untitled*")
+                self.GetParent().SetTitle(u"ऋ - नया फाइल*")
             elif (self.GetParent().GetTitle().find('*') == -1):
-                self.GetParent().SetTitle("Rhee - " + self.GetParent().filename + "*")
+                self.GetParent().SetTitle(u"ऋ - " + self.GetParent().filename + "*")
         if (self.GetParent().txtFile.CanUndo() == False):
             self.GetParent().txtFile.SetSavePoint()
             if (len(self.GetParent().filename) <= 0):
-                self.GetParent().SetTitle("Rhee - Untitled")
+                self.GetParent().SetTitle(u"ऋ - नया फाइल")
             else:
-                self.GetParent().SetTitle("Rhee - " + self.GetParent().filename)
+                self.GetParent().SetTitle(u"ऋ - " + self.GetParent().filename)
         ll = self.TextWidth(STC_STYLE_DEFAULT, "OOO")
         x = 0
         spaces = ""

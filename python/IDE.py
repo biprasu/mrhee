@@ -14,6 +14,7 @@ from wx import *
 
 from RheeVariables import *
 
+
 #*********************************************************************************************************************
 #Utility function for Call Tips
 
@@ -49,7 +50,8 @@ from RheeFrame import RheeFrame
 
 class RheeApp(App):
     def OnInit(self):
-        frame = RheeFrame(None, ID_APP, "Rhee - Untitled")
+        frame = RheeFrame(None, ID_APP, u"ऋ - नया फाइल")
+
         frame.Show(True)
 
         self.SetTopWindow(frame)
