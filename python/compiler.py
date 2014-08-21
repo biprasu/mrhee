@@ -23,11 +23,11 @@ class RheeCompiler:
     tab = ''
     env = (None, 'env')
 
-    def __init__(self):
-        self.temp = open('temp.py','wb')
+    def __init__(self, targetfilename='temp.py'):
+        self.temp = open(targetfilename,'wb')
         self.temp.write('#encoding=UTF8\n\n')
 
-    def compile(self, trees, tab = None):
+    def compile(self, trees, tab = None, fxn = None):
         if not tab: tab = self.tab
 
         for tree in trees:
@@ -76,6 +76,21 @@ class RheeCompiler:
                 stmt += ")"
                 return stmt
 
+            elif stmt == 'aryreference':
+                ident = self.compile([tree[2]])
+                indices = tree[3]
+                for item in indices:
+                    start = self.compile(item[2])
+                    if item[0] == 'normal':
+                        return ident + "[" + str(start) +"]"
+                    else:
+                        end = self.compile(item[3])
+                        return ident + "[" + str(start) + ":" + str(end) + "]"
+
+            elif stmt == 'reference':
+                item = tree[2][0]
+
+
             elif stmt == 'unaryminus':
                 return '(-1*' + self.compile(tree[2]) +')'
 
@@ -113,23 +128,28 @@ class RheeCompiler:
                     return 'not(' + self.compile(tree[3]) +')'
 
             elif stmt == 'expression':
-                self.temp.write(tab + self.compile(tree[2]).encode('utf8')+'\n')
+                self.temp.write(tab + self.compile(tree[2]).encode('utf8')+  "#"+str(lineno) +'\n')
 
             elif stmt == 'assign':
-                assign_stat = unicode_to_str(tree[2]) + ' = '+ self.compile(tree[3]).encode('utf8') + '\n'
+                refernc = tree[2]
+                if refernc[0] == 'identifier':
+                    assign_stat = unicode_to_str(refernc[2]) + ' = '+ self.compile(tree[3]).encode('utf8')+  "#"+str(lineno) + '\n'
+                # elif refernc[0] == 'aryreference':
+
+                # assign_stat = unicode_to_str(refernc[2]) + ' = '+ self.compile(tree[3]).encode('utf8') + '\n'
                 self.temp.write(tab + assign_stat)
 
             elif stmt == 'print':
                 print_stmt = ''
                 for item in tree[2]:
-                    print_stmt += 'print ' + self.compile(item)+'\n'
+                    print_stmt += 'print ' + self.compile(item)+  "#"+str(lineno) + '\n'
                 self.temp.write(tab + print_stmt.encode('utf8'))
 
             elif stmt == 'println':
                 print_stmt = 'print '
                 for item in tree[2]:
                     print_stmt += self.compile(item) +', '
-                print_stmt += '\'\'\n'
+                print_stmt += '\'\'' +  "#"+str(lineno) +'\n'
                 self.temp.write(tab + print_stmt.encode('utf8'))
 
             elif stmt == 'input':
@@ -137,22 +157,23 @@ class RheeCompiler:
                 for item in tree[2]:
                     tag = item[0][0]
                     if tag == 'identifier':
-                        input_stmt += unicode_to_str(item[0][2]) + ', '
-                input_stmt += ' = input()\n'
+                        var  = unicode_to_str(item[0][2])
+                        input_stmt += var + ', '
+                input_stmt = input_stmt[:-2]+ ' = raw_input()'+  "#"+str(lineno) +'\n'
                 self.temp.write(tab + input_stmt.encode('utf8'))
 
             elif stmt == 'increment':
                 operator = tree[2]
                 inc = self.compile(tree[4])
                 iden = tree[3]
-                inc_stmt = unicode_to_str(iden) + ' ' + operator + ' ' + inc + '\n'
+                inc_stmt = unicode_to_str(iden) + ' ' + operator + ' ' + inc +  "#"+str(lineno) + '\n'
                 self.temp.write(tab + inc_stmt.encode('utf8'))
 
             elif stmt == 'return':
                 return_stmt = 'return '
                 for ele in tree[1]:
                     return_stmt += self.compile([ele]) + ','
-                return_stmt = return_stmt[:-1] + '\n'
+                return_stmt = return_stmt[:-1] + "#"+str(lineno) +  '\n'
                 self.temp.write(tab + return_stmt.encode('utf8'))
 
             elif stmt == 'continue':
@@ -161,27 +182,27 @@ class RheeCompiler:
                 return 'break'
 
             elif stmt == 'slif':
-                if_stmt = 'if ' + self.compile(tree[2]) + " :\n"
+                if_stmt = 'if ' + self.compile(tree[2]) + " :" + "#"+str(lineno) +"\n"
                 self.temp.write(tab + if_stmt.encode('utf8'))
                 self.compile(tree[3], tab+'\t')
                 if tree[4]:
-                    if_stmt = 'else: \n'
+                    if_stmt = 'else: '+ "#"+str(lineno) +'\n'
                     self.temp.write(tab + if_stmt.encode('utf8'))
                     self.compile(tree[4], tab+'\t')
 
             elif stmt == 'mlif':
-                if_stmt = 'if ' + self.compile(tree[2]) + " :\n"
+                if_stmt = 'if ' + self.compile(tree[2]) + " :"+ "#"+str(lineno) +"\n"
                 self.temp.write(tab + if_stmt.encode('utf8'))
                 self.compile(tree[3], tab+'\t')
                 if tree[4]:
                     for elblock in tree[4]:
                         tag = elblock[0]
                         if tag == 'else-if':
-                            if_stmt = 'elif ' + self.compile(elblock[2]) + " :\n"
+                            if_stmt = 'elif ' + self.compile(elblock[2]) + " :"+ "#"+str(lineno)+"\n"
                             self.temp.write(tab + if_stmt.encode('utf8'))
                             self.compile(elblock[3], tab+'\t')
                         elif tag == 'else':
-                            if_stmt = 'else: \n'
+                            if_stmt = 'else: '+ "#"+str(lineno) +'\n'
                             self.temp.write(tab + if_stmt.encode('utf8'))
                             self.compile(elblock[2], tab+'\t')
 
@@ -189,18 +210,18 @@ class RheeCompiler:
                 pre = self.compile(tree[3])
                 post = self.compile(tree[4])
                 inc = self.compile(tree[5])
-                stmt_for = "for "+ unicode_to_str(tree[2]) + " in range(" + pre + "," + post + "," + inc +"):\n"
+                stmt_for = "for "+ unicode_to_str(tree[2]) + " in range(" + pre + "," + post + "," + inc +"):"+ "#"+str(lineno) +"\n"
                 self.temp.write(tab + stmt_for.encode('utf8'))
                 self.compile(tree[6], tab+'\t')
 
             elif stmt == 'whileloop':
-                while_stmt = 'while ' + self.compile(tree[2]) + ':\n'
+                while_stmt = 'while ' + self.compile(tree[2]) + ':'+ "#"+str(lineno)+'\n'
                 self.temp.write(tab + while_stmt.encode('utf8'))
                 self.compile(tree[3],tab+'\t')
 
             elif stmt == 'repeatloop':
                 iter = self.compile(tree[2])
-                repeat_stmt = 'for i in range(' + iter + '):\n'
+                repeat_stmt = 'for i in range(' + iter + '):'+ "#"+str(lineno) +'\n'
                 self.temp.write(tab + repeat_stmt.encode('utf8'))
                 self.compile(tree[3],tab+'\t')
 
@@ -209,9 +230,11 @@ class RheeCompiler:
                 fname_str = unicode_to_str(fname)
                 fparams = tree[3]
                 fbody = tree[4]
-                function_stmt = "def " + fname_str + "("
+                if fxn == 'class':
+                    function_stmt = "def " + (fname_str if fname != u'रचना' else '__init__') + "(self,"
+                else:   function_stmt = "def " + fname_str + "("
                 for param in fparams:   function_stmt += unicode_to_str(param) +", "
-                function_stmt += ") :\n"
+                function_stmt += ") :"+ "#"+str(lineno)+"\n"
                 self.temp.write(tab + function_stmt)
                 self.compile(fbody, tab+'\t')
                 self.temp.write('\n')
@@ -219,9 +242,9 @@ class RheeCompiler:
             elif stmt == 'classdef':
                 cname = unicode_to_str(tree[2])
                 cbody = tree[3]
-                class_stmt = "class " + cname +":\n"
+                class_stmt = "class " + cname +":"+ "#"+str(lineno)+"\n"
                 self.temp.write(tab+class_stmt)
-                self.compile(cbody,tab+'\t')
+                self.compile(cbody,tab+'\t',fxn = 'class')
                 self.temp.write('\n')
 
 
@@ -230,23 +253,35 @@ class RheeCompiler:
         self.temp.close()
 
 
+from Lexer import RheeLexer
+from Parser import RheeParser
+
+def compile_file(filename, targetfilename="temp.py"):
+    myLexer = RheeLexer()
+    myLexer.build()
+    myParser = RheeParser()
+    myParser.build(myLexer)
+
+    ast = myParser.test(open(filename,'r').read().decode('utf8'), myLexer)
+
+    myCompiler = RheeCompiler(targetfilename)
+    myCompiler.compile(ast)
+
 if __name__ == '__main__':
-    from Lexer import RheeLexer
-    from Parser import RheeParser
-    tokens = []
-    from Lexer import tokens
+
     myLexer = RheeLexer()
     myLexer.build()
     myParser = RheeParser()
     myParser.build(myLexer)
 
     ast = myParser.test(u'''
-क लेख
-यदि क == ख छ भए
-क लेख
-अथवा क == ख छैन भए
-ख लेख
-दिय
+	//क.क[४:४४] लेख
+	क = ४
+ख = ९
+जब सम्म शुन्य छ वा झुटो छ
+	क लेख
+	क += १
+बज
                                 ''', myLexer)
 
     myCompiler = RheeCompiler()
