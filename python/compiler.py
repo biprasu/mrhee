@@ -77,7 +77,6 @@ class RheeCompiler:
                 return stmt
 
             elif stmt == 'aryreference':
-<<<<<<< HEAD
                 ident = self.compile([tree[2]])
                 indices = tree[3]
                 for item in indices:
@@ -90,9 +89,6 @@ class RheeCompiler:
 
             elif stmt == 'reference':
                 item = tree[2][0]
-=======
-                ident = tree[2]
->>>>>>> 96b841c74020d61020857afba43235757948c6a2
 
 
             elif stmt == 'unaryminus':
@@ -137,11 +133,7 @@ class RheeCompiler:
             elif stmt == 'assign':
                 refernc = tree[2]
                 if refernc[0] == 'identifier':
-<<<<<<< HEAD
                     assign_stat = unicode_to_str(refernc[2]) + ' = '+ self.compile(tree[3]).encode('utf8')+  "#"+str(lineno) + '\n'
-=======
-                    assign_stat = unicode_to_str(refernc[2]) + ' = '+ self.compile(tree[3]).encode('utf8') + '\n'
->>>>>>> 96b841c74020d61020857afba43235757948c6a2
                 # elif refernc[0] == 'aryreference':
 
                 # assign_stat = unicode_to_str(refernc[2]) + ' = '+ self.compile(tree[3]).encode('utf8') + '\n'
@@ -167,11 +159,7 @@ class RheeCompiler:
                     if tag == 'identifier':
                         var  = unicode_to_str(item[0][2])
                         input_stmt += var + ', '
-<<<<<<< HEAD
                 input_stmt = input_stmt[:-2]+ ' = raw_input()'+  "#"+str(lineno) +'\n'
-=======
-                input_stmt = input_stmt[:-1]+ ' = raw_input()\n'
->>>>>>> 96b841c74020d61020857afba43235757948c6a2
                 self.temp.write(tab + input_stmt.encode('utf8'))
 
             elif stmt == 'increment':
@@ -287,7 +275,6 @@ if __name__ == '__main__':
     myParser.build(myLexer)
 
     ast = myParser.test(u'''
-<<<<<<< HEAD
 	//क.क[४:४४] लेख
 	क = ४
 ख = ९
@@ -295,9 +282,6 @@ if __name__ == '__main__':
 	क लेख
 	क += १
 बज
-=======
-	क[४] लेख
->>>>>>> 96b841c74020d61020857afba43235757948c6a2
                                 ''', myLexer)
 
     myCompiler = RheeCompiler()
