@@ -2,6 +2,7 @@
 from wx import *
 from wx.stc import *
 from RheeVariables import *
+from rhee_keyword import keywords
 
 class RheeText(StyledTextCtrl):
     def __init__(self, parent, id):
@@ -16,15 +17,17 @@ class RheeText(StyledTextCtrl):
         self.MarkerDefine(0, STC_MARK_ARROW)
         self.SetScrollWidth(1)
 
+        self.keywords = [k+u"?%d"%AUTOCOMPLETE_INBUILT for k in keywords]
+
         print self.AutoCompGetSeparator()
         print self.AutoCompGetDropRestOfWord()
         self.AutoCompSetAutoHide(False)
         self.AutoCompSetDropRestOfWord(True)
         # self.AutoCompSetFillUps('a')
 
-        self.RegisterImage(1, Bitmap(bitmapdirectory + '/reload24.xpm') )
-        self.RegisterImage(2, Bitmap(bitmapdirectory + '/reload24.xpm') )
-        self.RegisterImage(3, Bitmap(bitmapdirectory + '/reload24.xpm') )
+        self.RegisterImage(AUTOCOMPLETE_VARIABLE, Bitmap(bitmapdirectory + '/autocomplete_variable.png') )
+        self.RegisterImage(AUTOCOMPLETE_INBUILT, Bitmap(bitmapdirectory + '/autocomplete_inbuilt.png') )
+        self.RegisterImage(AUTOCOMPLETE_FUNCTION_CLASS, Bitmap(bitmapdirectory + '/autocomplete_function_class.png') )
 
         EVT_STC_MODIFIED(parent, id, self.OnModified)
         EVT_UPDATE_UI(self, id, self.OnUpdateUI)
@@ -110,7 +113,11 @@ class RheeText(StyledTextCtrl):
         self.GetParent().RunShortcuts(event)
         # print self.GetCurrentPos()
         # if self.GetCurrentLine() != 0:      #the autcomp was showing wierd behavior at first line, so cancel it
-        list = [u"रामरामराम?1", u"हरिहरि?1",u"कालमहिमा?2", u"रामायन?2"]
+        variable_list = [u"रामरामराम", u"हरिहरि"]
+        function_class_list = [u"कालमहिमा", u"रामायन"]
+
+        list = [k+u"?%d"%AUTOCOMPLETE_VARIABLE for k in variable_list] \
+               + [k+u"?%d"%AUTOCOMPLETE_FUNCTION_CLASS for k in function_class_list] +  self.keywords
         # list = ["public?1", "private?2", "nothing?3", "everything?3"]
         # if not self.AutoCompActive():
         # self.AutoCompShow(3, u" ".join(sorted(list)))
@@ -136,6 +143,7 @@ class RheeText(StyledTextCtrl):
         # self.AutoCompShow(3, "")
 
     def GetCurrentWord(self, pos):
+
         # returns ip, fp: ip=initial position, fp=final position
         ip, fp = 0, self.GetLength()-1
         p = pos-1

@@ -11,7 +11,7 @@ import rhee_keyword
 from RheeUtils import MapBreakPoints
 import re
 import time
-
+from RheeFindReplace import RheeFindReplaceDialog
 from RheeWatch import RheeWatch
 
 if (Platform == '__WXMSW__'):
@@ -148,7 +148,7 @@ class RheeFrame(Frame):
         self.promptvisiblefile = self.promptisvisible
 
         if (Platform == '__WXMSW__'):
-            self.SetIcon(Icon((bitmapdirectory + "/drpython.ico"), BITMAP_TYPE_ICO))
+            self.SetIcon(Icon((bitmapdirectory + "/rhee.ico"), BITMAP_TYPE_ICO))
         else:
             self.SetIcon(Icon((bitmapdirectory + "/drpython.xpm"), BITMAP_TYPE_XPM))
 
@@ -235,6 +235,8 @@ class RheeFrame(Frame):
                                 " Remove a breakpoint from the current program")
         self.programmenu.Append(ID_REMOVE_ALL_BREAKPOINTS, "Remove &All Breakpoints",
                                 " Remove all breakpoints from the current program")
+        self.programmenu.Append(ID_FLOWCHART, "Flowchart",
+                                " Show Flowchart")
         self.programmenu.Enable(ID_RUN, False)
         self.programmenu.Enable(ID_SET_ARGS, False)
         self.programmenu.Enable(ID_END, False)
@@ -296,6 +298,7 @@ class RheeFrame(Frame):
         EVT_MENU(self, ID_PYTHON_DEBUGGER, self.OnRunWithDebugger)
         EVT_MENU(self, ID_END, self.OnEnd)
         EVT_MENU(self, ID_ADD_BREAKPOINT, self.OnAddBreakpoint)
+        EVT_MENU(self, ID_FLOWCHART, self.OnFlowchart)
         # EVT_MENU(self, ID_REMOVE_BREAKPOINT, self.OnRemoveBreakpoint)
         # EVT_MENU(self, ID_REMOVE_ALL_BREAKPOINTS, self.OnRemoveAllBreakpoints)
 
@@ -647,7 +650,7 @@ class RheeFrame(Frame):
 
     def OnClose(self, event):
         if (self.txtFile.GetModify()):
-            d = MessageDialog(self, "Would you like to save first?   ", "Rhee", YES_NO | CANCEL | ICON_QUESTION)
+            d = MessageDialog(self, u"के फाइल सेव गर्न चाहनुहुन्छ?   ", u"ऋ", YES_NO | CANCEL | ICON_QUESTION)
             answer = d.ShowModal()
             d.Destroy()
             if (answer == ID_YES):
@@ -656,10 +659,11 @@ class RheeFrame(Frame):
                 return
         self.txtFile.SetText("")
         self.filename = ""
-        self.SetTitle("Rhee - Untitled")
+        self.SetTitle(u"ऋ - नया फाइल")
         self.txtFile.EmptyUndoBuffer()
         self.txtFile.SetSavePoint()
         self.toolbar.EnableTool(ID_RUN, False)
+        self.toolbar.EnableTool(ID_FLOWCHART, False)
         self.toolbar.EnableTool(ID_SET_ARGS, False)
         self.programmenu.Enable(ID_RUN, False)
         self.programmenu.Enable(ID_SET_ARGS, False)
@@ -670,7 +674,7 @@ class RheeFrame(Frame):
 
     def OnCloseW(self, event):
         if (event.CanVeto() and self.txtFile.GetModify()):
-            d = MessageDialog(self, "Would you like to save first?   ", "Rhee", YES_NO | CANCEL | ICON_QUESTION)
+            d = MessageDialog(self, u"के तपाई सेव गर्न चाहनुहुन्छ?    ", u"ऋ", YES_NO | CANCEL | ICON_QUESTION)
             answer = d.ShowModal()
             d.Destroy()
             if (answer == ID_YES):
@@ -695,6 +699,7 @@ class RheeFrame(Frame):
         if (self.pid is not -1):
             if (len(self.filename) > 0):
                 self.toolbar.EnableTool(ID_RUN, True)
+                self.toolbar.EnableTool(ID_FLOWCHART, True)
                 self.toolbar.EnableTool(ID_SET_ARGS, True)
                 self.programmenu.Enable(ID_RUN, True)
                 self.programmenu.Enable(ID_SET_ARGS, True)
@@ -872,9 +877,10 @@ class RheeFrame(Frame):
                 self.txtFile.GetTextRange(self.txtFile.GetSelectionStart(), self.txtFile.GetSelectionEnd()))
         else:
             data.SetFindString(self.findtext)
-        d = FindReplaceDialog(self, data, "Find", FR_NOUPDOWN)
+        d = RheeFindReplaceDialog(self, data, "Find", FR_NOUPDOWN)
         d.data = data
         d.Show(True)
+
 
     def OnMenuFindNext(self, event):
         if (self.txtFile.GetSelectionStart() < self.txtFile.GetSelectionEnd()):
@@ -905,7 +911,7 @@ class RheeFrame(Frame):
 
 
     def OnNew(self, event):
-        f = RheeFrame(None, -1, "Rhee - Untitled")
+        f = RheeFrame(None, -1, u"ऋ - नया फाइल")
         f.Show(True)
 
     def OnOpen(self, event):
@@ -1012,7 +1018,8 @@ class RheeFrame(Frame):
         self.SetStatusText(" ")
         self.DebugActive = False
         self.Go = False
-        self.WatchWindow.Show(False)
+        if self.WatchWindow.Shown: self.WatchWindow.Show(False)
+        self.txtFile.MarkerDeleteAll(MARKER_LINE)
 
         self.pid = -1
         # self.txtPrompt.SetReadOnly(0)
@@ -1023,6 +1030,7 @@ class RheeFrame(Frame):
         self.txtPrompt.SetReadOnly(1)
         if (len(self.filename) > 0):
             self.toolbar.EnableTool(ID_RUN, True)
+            self.toolbar.EnableTool(ID_FLOWCHART, False)
             self.toolbar.EnableTool(ID_SET_ARGS, True)
             self.programmenu.Enable(ID_RUN, True)
             self.programmenu.Enable(ID_SET_ARGS, True)
@@ -1036,6 +1044,7 @@ class RheeFrame(Frame):
     def OnPython(self, event):
         if (self.pid is -1):
             self.toolbar.EnableTool(ID_RUN, False)
+            self.toolbar.EnableTool(ID_FLOWCHART, False)
             self.toolbar.EnableTool(ID_SET_ARGS, False)
             self.toolbar.EnableTool(ID_PYTHON, False)
             self.toolbar.EnableTool(ID_END, True)
@@ -1192,7 +1201,8 @@ class RheeFrame(Frame):
         if (l > 0):
             x = 0
             while (x < l):
-                self.process.GetOutputStream().write("break " + str(self.rheetopy[self.breakpoints[x]] + 1) + '\n')
+                if self.breakpoints[x] in self.rheetopy:
+                    self.process.GetOutputStream().write("break " + str(self.rheetopy[self.breakpoints[x]] + 1) + '\n')
                 x = x + 1
 
         time.sleep(1)
@@ -1210,7 +1220,7 @@ class RheeFrame(Frame):
             else:
                 self.SaveFile()
                 self.txtFile.SetSavePoint()
-            self.SetTitle("Rhee - " + self.filename)
+            self.SetTitle(u"ऋ - " + self.filename)
 
     def OnSaveAs(self, event):
         dlg = FileDialog(self, "Save File As", "", "", wildcard, SAVE | OVERWRITE_PROMPT)
@@ -1229,6 +1239,7 @@ class RheeFrame(Frame):
             self.SaveFile()
             #Update Recent Files
             self.toolbar.EnableTool(ID_RUN, True)
+            self.toolbar.EnableTool(ID_FLOWCHART, True)
             self.toolbar.EnableTool(ID_SET_ARGS, True)
             self.programmenu.Enable(ID_RUN, True)
             self.programmenu.Enable(ID_SET_ARGS, True)
@@ -1249,7 +1260,7 @@ class RheeFrame(Frame):
             self.txtFile.EmptyUndoBuffer()
             self.txtFile.SetSavePoint()
         dlg.Destroy()
-        self.SetTitle("Rhee - " + self.filename)
+        self.SetTitle(u"ऋ - " + self.filename)
 
     def OnSetArgs(self, event):
         if (len(self.filename) > 0):
@@ -1283,6 +1294,8 @@ class RheeFrame(Frame):
             self.txtFile.SetViewWhiteSpace(True)
             self.toolbar.ToggleTool(ID_TOGGLE_VIEWWHITESPACE, True)
 
+    def OnFlowchart(self, event):
+        pass
 
     def OnUnCommentRegion(self, event):
         selstart, selend = self.txtFile.GetSelection()
@@ -1334,7 +1347,7 @@ class RheeFrame(Frame):
                 t = self.filename.replace("\\", "/")
             else:
                 t = self.filename
-            f = RheeFrame(None, -1, ("Rhee - " + t), t)
+            f = RheeFrame(None, -1, (u"ऋ - " + t), t)
             f.Show(True)
         else:
             try:
@@ -1368,6 +1381,7 @@ class RheeFrame(Frame):
 
                 if (self.process is None):
                     self.toolbar.EnableTool(ID_RUN, True)
+                    self.toolbar.EnableTool(ID_FLOWCHART, True)
                     self.toolbar.EnableTool(ID_SET_ARGS, True)
                     self.programmenu.Enable(ID_RUN, True)
                     self.programmenu.Enable(ID_SET_ARGS, True)
@@ -1375,7 +1389,7 @@ class RheeFrame(Frame):
                     self.programmenu.Enable(ID_PYTHON_DEBUGGER, True)
                     self.toolbar.EnableTool(ID_RELOAD, True)
                     self.filemenu.Enable(ID_RELOAD, True)
-                self.SetTitle("Rhee - " + self.filename)
+                self.SetTitle(u"ऋ - " + self.filename)
                 if (oof.find("\r\n") > -1):
                     emode = STC_EOL_CRLF
                     emodenum = 1
@@ -1487,12 +1501,13 @@ class RheeFrame(Frame):
         self.toolbar.AddSimpleTool(ID_SAVE, Bitmap((bitmapdirectory + "/save" + iconsizestr), BITMAP_TYPE_XPM), u"सेव",
                                    u"फाइल सेव गर")
         self.toolbar.AddSeparator()
+        self.toolbar.AddSeparator()
+        self.toolbar.AddSeparator()
         self.toolbar.AddSimpleTool(ID_FIND, Bitmap((bitmapdirectory + "/find" + iconsizestr), BITMAP_TYPE_XPM), u"खोज",
                                    u"फाइलमा शब्द खोज")
         self.toolbar.AddSimpleTool(ID_REPLACE, Bitmap((bitmapdirectory + "/replace" + iconsizestr), BITMAP_TYPE_XPM),
                                    u"रिप्लेस", u"शब्दहरु रिप्लेस गर")
-        self.toolbar.AddSeparator()
-        self.toolbar.AddSeparator()
+
         # self.toolbar.AddSimpleTool(ID_PREFS, Bitmap((bitmapdirectory + "/prefs" + iconsizestr), BITMAP_TYPE_XPM),
         #                            "Preferences", "Customize Rhee")
         # self.toolbar.AddSimpleTool(ID_TOGGLE_PROMPT,
@@ -1518,6 +1533,12 @@ class RheeFrame(Frame):
         self.toolbar.AddSimpleTool(ID_END, Bitmap((bitmapdirectory + "/stop" + iconsizestr), BITMAP_TYPE_XPM), u"रोक",
                                    u"कोड रोक")
 
+        self.toolbar.AddSeparator()
+        self.toolbar.AddSeparator()
+        self.toolbar.AddSeparator()
+        self.toolbar.AddSimpleTool(ID_FLOWCHART, Bitmap((bitmapdirectory + "/flowchart.png"), BITMAP_TYPE_PNG), u"फ्लोचार्ट",
+                                   u"कोड रोक")
+
         if (len(self.filename) < 1):
             # self.toolbar.EnableTool(ID_RELOAD, False)
             # self.toolbar.EnableTool(ID_RUN, False)
@@ -1529,6 +1550,7 @@ class RheeFrame(Frame):
 
         else:
             self.toolbar.EnableTool(ID_RUN, False)
+            self.toolbar.EnableTool(ID_FLOWCHART, False)
             self.toolbar.EnableTool(ID_SET_ARGS, False)
             self.toolbar.EnableTool(ID_PYTHON, False)
             self.toolbar.EnableTool(ID_PYTHON_DEBUGGER, False)
@@ -1552,6 +1574,7 @@ class RheeFrame(Frame):
     def runcommand(self, command, event):
         if (len(self.filename) > 0) and (self.pid is -1):
             self.toolbar.EnableTool(ID_RUN, False)
+            self.toolbar.EnableTool(ID_FLOWCHART, False)
             self.toolbar.EnableTool(ID_SET_ARGS, False)
             self.toolbar.EnableTool(ID_PYTHON, False)
             self.toolbar.EnableTool(ID_PYTHON_DEBUGGER, False)
@@ -1580,7 +1603,7 @@ class RheeFrame(Frame):
                     d = ScrolledMessageDialog(self, "Error Setting current directory for Python.", "Rhee RunError")
                     d.ShowModal()
                     d.Destroy()
-            self.SetStatusText("Running " + self.filename)
+            self.SetStatusText(self.filename + u" चलाउदै " )
             self.process = Process(self)
             self.process.Redirect()
             if (Platform == '__WXMSW__'):
@@ -1594,7 +1617,10 @@ class RheeFrame(Frame):
         if ((keycode + ord('a') - 1) == ord('n')):
             self.OnNew(event)
         elif ((keycode + ord('a') - 1) == ord('s')):
-            self.OnSave(event)
+            if event.m_shiftDown:
+                self.OnSaveAs(event)
+            else:
+                self.OnSave(event)
         elif ((keycode + ord('a') - 1) == ord('o')):
             self.OnOpen(event)
         elif ((keycode + ord('a') - 1) == ord('p')):
@@ -1620,6 +1646,10 @@ class RheeFrame(Frame):
         elif (keycode == WXK_F2):
             self.OnAddBreakpoint(event)
         elif (keycode == WXK_F8):
+            # if self.WaitingForDebugInput:
+            #TODO: Figure out the step in pattern
+            self.WriteDebugString('n\n')
+        elif (keycode == WXK_F7):
             # if self.WaitingForDebugInput:
             #TODO: Figure out the step in pattern
             self.WriteDebugString('s\n')

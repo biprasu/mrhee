@@ -50,6 +50,7 @@ from RheeFrame import RheeFrame
 
 class RheeApp(App):
     def OnInit(self):
+
         frame = RheeFrame(None, ID_APP, u"ऋ - नया फाइल")
 
         frame.Show(True)

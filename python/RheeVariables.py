@@ -43,6 +43,7 @@ ID_END = 125
 ID_ADD_BREAKPOINT = 126
 ID_REMOVE_BREAKPOINT = 127
 ID_REMOVE_ALL_BREAKPOINTS = 128
+ID_FLOWCHART = 129
 
 ID_PREFS = 131
 ID_TOGGLE_PROMPT = 132
@@ -60,6 +61,11 @@ STYLE_DEFAULT = 1001
 
 MARKER_BREAKPOINT = 1
 MARKER_LINE = 4
+
+AUTOCOMPLETE_VARIABLE = 1
+AUTOCOMPLETE_INBUILT = 2
+AUTOCOMPLETE_FUNCTION_CLASS = 3
+
 #Font, System constants
 #If homedirectory does not work correctly on your platform,
 #comment it out, and set the variable to your homedirectory.
