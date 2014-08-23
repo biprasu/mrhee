@@ -32,49 +32,6 @@ def killProcess(pid):
 
 #*********************************************************************************************************************
 
-class RheeFindReplace(Dialog):
-    def __init__(self, parent, id, title):
-        Dialog.__init__(self, parent, id, title, Point(50, 50), Size(350, 160))
-
-        self.ID_SWITCH = 3001
-        self.ID_CANCEL = 3002
-
-        stA = StaticText(self, id, "Switch: ", Point(10, 10))
-        stB = StaticText(self, id, "With:   ", Point(10, 40))
-
-        self.txtA = TextCtrl(self, id, "", Point(60, 10), Size(270, 25))
-        self.txtA.SetFocus()
-        self.txtB = TextCtrl(self, id, "", Point(60, 40), Size(270, 25))
-
-        self.chkCase = CheckBox(self, id, "&Match Case", Point(10, 75))
-        self.chkWholeWord = CheckBox(self, id, "Match &Whole Word", Point(10, 100))
-
-        self.btnSwitch = Button(self, self.ID_SWITCH, "&Switch All", Point(160, 85))
-        self.btnSwitch.SetDefault()
-        self.btnCancel = Button(self, self.ID_CANCEL, "&Cancel", Point(250, 85))
-        EVT_BUTTON(self, self.ID_SWITCH, self.OnbtnSwitch)
-        EVT_BUTTON(self, self.ID_CANCEL, self.OnbtnCancel)
-
-        self.textA = ""
-        self.textB = ""
-        self.flags = FR_DOWN
-
-
-    def IsValidText(self):
-        return ((len(self.textA) > 0) and (len(self.textB) > 0))
-
-    def OnbtnSwitch(self, event):
-        self.textA = self.txtA.GetValue()
-        self.textB = self.txtB.GetValue()
-        if (self.chkCase.IsChecked()):
-            self.flags = self.flags + FR_WHOLEWORD
-        if (self.chkWholeWord.IsChecked()):
-            self.flags = self.flags + FR_MATCHCASE
-        self.EndModal(0)
-
-    def OnbtnCancel(self, event):
-        self.EndModal(0)
-
 
 
 class RheeFrame(Frame):
@@ -373,11 +330,11 @@ class RheeFrame(Frame):
             x = x + 1
 
     def Finder(self, event_type):
-        if (event_type == EVT_COMMAND_FIND):
+        if (event_type == EVT_COMMAND_FIND.typeId):
             self.findpos = self.txtFile.GetCurrentPos()
             p = self.txtFile.FindText(0, self.txtFile.GetLength(), self.findtext, self.findflags)
             if (p == -1):
-                d = ScrolledMessageDialog(self, ("Search string (" + self.findtext + ") not found"), "Rhee Find")
+                d = ScrolledMessageDialog(self, (u"खोजिएको शब्द (" + self.findtext + u") भेटिएन"), u"ऋ खोज")
                 d.ShowModal()
                 d.Destroy()
             p = self.txtFile.FindText(self.txtFile.GetCurrentPos(), self.txtFile.GetLength(), self.findtext,
@@ -388,24 +345,30 @@ class RheeFrame(Frame):
                 self.txtFile.GotoPos(p)
                 self.txtFile.SetSelectionStart(p)
                 self.findpos = p
-                self.txtFile.SetSelectionEnd(p + len(self.findtext))
-        elif (event_type == EVT_COMMAND_FIND_NEXT):
+                self.txtFile.SetSelectionEnd(p + len(self.findtext.encode('utf8')))
+        elif (event_type == EVT_COMMAND_FIND_NEXT.typeId):
+
             self.findpos = self.txtFile.GetCurrentPos()
             p = self.txtFile.FindText(self.txtFile.GetCurrentPos(), self.txtFile.GetLength(), self.findtext,
                                       self.findflags)
             if (p == -1):
                 p = self.txtFile.FindText(0, self.txtFile.GetLength(), self.findtext, self.findflags)
+                if (p == -1):
+                    d = ScrolledMessageDialog(self, (u"खोजिएको शब्द (" + self.findtext + u") भेटिएन"), u"ऋ खोज")
+                    d.ShowModal()
+                    d.Destroy()
+                    return
             self.txtFile.GotoPos(p)
             self.txtFile.SetSelectionStart(p)
             self.findpos = p
-            self.txtFile.SetSelectionEnd(p + len(self.findtext))
-        elif (event_type == EVT_COMMAND_FIND_REPLACE):
+            self.txtFile.SetSelectionEnd(p + len(self.findtext.encode('utf8')))
+        elif (event_type == EVT_COMMAND_FIND_REPLACE.typeId):
             if (len(self.replacetext) > 0):
-                if (self.txtFile.GetCurrentPos() == (self.findpos + len(self.findtext))):
+                if (self.txtFile.GetCurrentPos() == (self.findpos + len(self.findtext.encode('utf8')))):
                     self.txtFile.SetTargetStart(self.findpos)
-                    self.txtFile.SetTargetEnd(self.findpos + len(self.findtext))
+                    self.txtFile.SetTargetEnd(self.findpos + len(self.findtext.encode('utf8')))
                     self.txtFile.ReplaceTarget(self.replacetext)
-        elif (event_type == EVT_COMMAND_FIND_REPLACE_ALL):
+        elif (event_type == EVT_COMMAND_FIND_REPLACE_ALL.typeId):
             if (len(self.replacetext) > 0):
                 p = self.txtFile.FindText(0, self.txtFile.GetLength(), self.findtext, self.findflags)
                 x = 0
@@ -414,7 +377,7 @@ class RheeFrame(Frame):
                     self.txtFile.SetTargetStart(p)
                     self.txtFile.SetTargetEnd(p + len(self.findtext))
                     self.txtFile.ReplaceTarget(self.replacetext)
-                    p = self.txtFile.FindText((p + len(self.replacetext)), self.txtFile.GetLength(), self.findtext,
+                    p = self.txtFile.FindText((p + len(self.replacetext.encode('utf8'))), self.txtFile.GetLength(), self.findtext,
                                               self.findflags)
                     x = x + 1
                 d = ScrolledMessageDialog(self, (
@@ -719,8 +682,8 @@ class RheeFrame(Frame):
         self.Close(False)
 
     def OnFind(self, event):
-        map = {EVT_COMMAND_FIND: "FIND", EVT_COMMAND_FIND_NEXT: "FIND_NEXT", EVT_COMMAND_FIND_REPLACE: "REPLACE",
-               EVT_COMMAND_FIND_REPLACE_ALL: "REPLACE_ALL"}
+        map = {EVT_COMMAND_FIND.typeId: "FIND", EVT_COMMAND_FIND_NEXT.typeId: "FIND_NEXT", EVT_COMMAND_FIND_REPLACE.typeId: "REPLACE",
+               EVT_COMMAND_FIND_REPLACE_ALL.typeId: "REPLACE_ALL"}
         et = event.GetEventType()
         try:
             eventType = map[et]
@@ -728,14 +691,14 @@ class RheeFrame(Frame):
             d = ScrolledMessageDialog(self, "FindReplace Dialog Event Type Error", "Rhee Internal Error!")
             d.ShowModal()
             d.Destroy()
-        if (et == EVT_COMMAND_FIND_REPLACE):
+        if (et == EVT_COMMAND_FIND_REPLACE.typeId):
             self.findtext = event.GetFindString()
             self.findflags = event.GetFlags()
             self.replacetext = event.GetReplaceString()
-        elif (et == EVT_COMMAND_FIND):
+        elif (et == EVT_COMMAND_FIND.typeId or et==EVT_COMMAND_FIND_NEXT.typeId):
             self.findtext = event.GetFindString()
             self.findflags = event.GetFlags()
-        elif (et == EVT_COMMAND_FIND_REPLACE_ALL):
+        elif (et == EVT_COMMAND_FIND_REPLACE_ALL.typeId):
             self.replacetext = event.GetReplaceString()
             self.findtext = event.GetFindString()
             self.findflags = event.GetFlags()
@@ -877,8 +840,13 @@ class RheeFrame(Frame):
                 self.txtFile.GetTextRange(self.txtFile.GetSelectionStart(), self.txtFile.GetSelectionEnd()))
         else:
             data.SetFindString(self.findtext)
-        d = RheeFindReplaceDialog(self, data, "Find", FR_NOUPDOWN)
-        d.data = data
+
+        # if False:
+        #     d = FindReplaceDialog(self, data, "Find", FR_NOUPDOWN)
+        #     d.data = data
+        # else:
+        d = RheeFindReplaceDialog(self, -1, "Find", data.GetFindString(), findreplace = False)
+        # d = RheeFindReplaceDialog(self)
         d.Show(True)
 
 
@@ -894,8 +862,9 @@ class RheeFrame(Frame):
                 self.txtFile.GetTextRange(self.txtFile.GetSelectionStart(), self.txtFile.GetSelectionEnd()))
         else:
             data.SetFindString(self.findtext)
-        d = FindReplaceDialog(self, data, "Replace", FR_NOUPDOWN | FR_REPLACEDIALOG)
-        d.data = data
+        # d = FindReplaceDialog(self, data, "Replace", FR_NOUPDOWN | FR_REPLACEDIALOG)
+        # d.data = data
+        d = RheeFindReplaceDialog(self, -1, "Find", data.GetFindString(), findreplace = True)
         d.Show(True)
 
     def OnMenuSwitcheroo(self, event):
