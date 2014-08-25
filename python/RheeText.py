@@ -2,7 +2,8 @@
 from wx import *
 from wx.stc import *
 from RheeVariables import *
-from rhee_keyword import keywords
+from RheeAutoComplete import keywords, GetAutoCompleteList
+
 
 class RheeText(StyledTextCtrl):
     def __init__(self, parent, id):
@@ -18,9 +19,9 @@ class RheeText(StyledTextCtrl):
         self.SetScrollWidth(1)
 
         self.keywords = [k+u"?%d"%AUTOCOMPLETE_INBUILT for k in keywords]
-
-        print self.AutoCompGetSeparator()
-        print self.AutoCompGetDropRestOfWord()
+        self.global_vars, self.local_vars, self.function_class_list = [], [], []
+        # print self.AutoCompGetSeparator()
+        # print self.AutoCompGetDropRestOfWord()
         self.AutoCompSetAutoHide(False)
         self.AutoCompSetDropRestOfWord(True)
         # self.AutoCompSetFillUps('a')
@@ -47,6 +48,9 @@ class RheeText(StyledTextCtrl):
                 self.GetParent().SetTitle(u"ऋ - नया फाइल")
             else:
                 self.GetParent().SetTitle(u"ऋ - " + self.GetParent().filename)
+                self.global_vars, self.local_vars, self.function_class_list = GetAutoCompleteList(
+                self.GetText(), self.GetCurrentLine())
+
         ll = self.TextWidth(STC_STYLE_DEFAULT, "OOO")
         x = 0
         spaces = ""
@@ -93,31 +97,40 @@ class RheeText(StyledTextCtrl):
         keycode = event.GetKeyCode()
         pos = self.GetCurrentPos()
         # event.Skip()
-        if (keycode == WXK_RETURN) and (self.GetParent().autoindent) and not self.AutoCompActive():
-            line = self.GetLine(self.GetCurrentLine())
-            pos = self.GetCurrentPos()
-            self.GotoLine(self.LineFromPosition(pos))
-            sop = pos - self.GetCurrentPos()
-            self.GotoPos(pos)
-            line = line[0:sop]
-            numtabs = line.count('\t')
-            self.AddText('\n')
-            x = 0
-            while (x < numtabs):
-                self.AddText('\t')
-                x = x + 1
+        if (keycode == WXK_RETURN):
+            self.global_vars, self.local_vars, self.function_class_list = GetAutoCompleteList(
+                self.GetText(), self.GetCurrentLine())
+            if (self.GetParent().autoindent) and not self.AutoCompActive():
+                line = self.GetLine(self.GetCurrentLine())
+                pos = self.GetCurrentPos()
+                self.GotoLine(self.LineFromPosition(pos))
+                sop = pos - self.GetCurrentPos()
+                self.GotoPos(pos)
+                line = line[0:sop]
+                numtabs = line.count('\t')
+                self.AddText('\n')
+                x = 0
+                while (x < numtabs):
+                    self.AddText('\t')
+                    x = x + 1
+            else:
+                event.Skip()
         else:
             event.Skip()
+
 
     def OnChar(self, event):
         self.GetParent().RunShortcuts(event)
         # print self.GetCurrentPos()
         # if self.GetCurrentLine() != 0:      #the autcomp was showing wierd behavior at first line, so cancel it
-        variable_list = [u"रामरामराम", u"हरिहरि"]
-        function_class_list = [u"कालमहिमा", u"रामायन"]
+        # global_vars, local_vars, function_class_list = GetAutoCompleteList(
+        #     self.GetText(), self.LineFromPosition(self.GetPosition()))
+
+        variable_list = self.global_vars + self.local_vars
+
 
         list = [k+u"?%d"%AUTOCOMPLETE_VARIABLE for k in variable_list] \
-               + [k+u"?%d"%AUTOCOMPLETE_FUNCTION_CLASS for k in function_class_list] +  self.keywords
+               + [k+u"?%d"%AUTOCOMPLETE_FUNCTION_CLASS for k in self.function_class_list] +  self.keywords
         # list = ["public?1", "private?2", "nothing?3", "everything?3"]
         # if not self.AutoCompActive():
         # self.AutoCompShow(3, u" ".join(sorted(list)))
@@ -126,7 +139,7 @@ class RheeText(StyledTextCtrl):
         ip, fp = self.GetCurrentWord(l)
         self.SetSelectionStart(ip)
         self.SetSelectionEnd(fp+1)
-        word = self.GetSelectedText()
+        word = self.GetSelectedText().strip()
         self.SetSelectionStart(l)
         self.SetSelectionEnd(l)
         if len(word)>=3:

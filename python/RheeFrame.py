@@ -7,7 +7,7 @@ from RheePrompt import RheePrompt
 from RheeText import RheeText
 from wx.lib.dialogs import ScrolledMessageDialog
 from compiler import compile_file
-import rhee_keyword
+import RheeAutoComplete
 from RheeUtils import MapBreakPoints
 import re
 import time
@@ -274,7 +274,7 @@ class RheeFrame(Frame):
         self.SetStatusText(u"ऋ मा स्वागत छ")
 
         self.txtFile.SetLexer(STC_LEX_CPP)
-        self.txtFile.SetKeyWords(0, u' '.join(rhee_keyword.keywords))
+        self.txtFile.SetKeyWords(0, u' '.join(RheeAutoComplete.keywords))
 
         self.SetupPrefsFile()
 
