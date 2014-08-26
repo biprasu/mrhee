@@ -630,7 +630,7 @@ class RheeFrame(Frame):
         self.txtFile.EmptyUndoBuffer()
         self.txtFile.SetSavePoint()
         self.toolbar.EnableTool(ID_RUN, False)
-        self.toolbar.EnableTool(ID_FLOWCHART, False)
+        # self.toolbar.EnableTool(ID_FLOWCHART, False)
         self.toolbar.EnableTool(ID_SET_ARGS, False)
         self.programmenu.Enable(ID_RUN, False)
         self.programmenu.Enable(ID_SET_ARGS, False)
@@ -666,7 +666,7 @@ class RheeFrame(Frame):
         if (self.pid is not -1):
             if (len(self.filename) > 0):
                 self.toolbar.EnableTool(ID_RUN, True)
-                self.toolbar.EnableTool(ID_FLOWCHART, True)
+                # self.toolbar.EnableTool(ID_FLOWCHART, True)
                 self.toolbar.EnableTool(ID_SET_ARGS, True)
                 self.programmenu.Enable(ID_RUN, True)
                 self.programmenu.Enable(ID_SET_ARGS, True)
@@ -784,11 +784,14 @@ class RheeFrame(Frame):
 
         for path, line in ln:
             if os.path.abspath(path) == os.path.abspath(self.outfile):
-                error_line = self.pytorhee[int(line)-1]
+                if line in self.pytorhee:
+                    error_line = self.pytorhee[int(line)-1]
+                else:
+                    error_line = -1
                 self.txtFile.MarkerDeleteAll(MARKER_LINE)
                 self.txtFile.MarkerAdd(error_line, MARKER_LINE_ERROR)
                 # self.txtFile.Marker
-                self.txtFile.GotoLine(error_line)
+                if error_line != -1: self.txtFile.GotoLine(error_line)
                 rhee_error_text = ''
                 for pythonerror in error_map.keys():
                     if pythonerror in errorstring:
@@ -797,11 +800,14 @@ class RheeFrame(Frame):
                 else:
                     rhee_error_text = u"कोडमा समस्या भेटियो"
 
-                rhee_error = u"लाइन %s मा: \n "% to_uni(str(error_line)) + rhee_error_text
+                rhee_error = u"लाइन %s मा: \n "% to_uni(str(error_line+1)) + rhee_error_text if error_line !=-1 else rhee_error_text
                 d = MessageDialog(self, rhee_error,
                                               u"गल्ति भेटियो", OK | ICON_ERROR)
+
+
                 d.ShowModal()
-                d.Destroy()
+                # d.Destroy()
+                # time.sleep(2)
                 self.txtFile.MarkerDeleteAll(MARKER_LINE_ERROR)
 
         if self.DebugActive: self.OnEnd(None)
@@ -842,7 +848,7 @@ class RheeFrame(Frame):
                         return
                     else:
                         #TODO: Check out the prompt here
-                        if all(text.isalphanum()): continue
+                        if len(text) == len(text.decode('utf-8')): continue
                         self.txtPrompt.SetReadOnly(0)
                         if len(text)>0 and text[:-1]!='\n': text+='\n'
 
@@ -1040,7 +1046,7 @@ class RheeFrame(Frame):
         self.txtPrompt.SetReadOnly(1)
         if (len(self.filename) > 0):
             self.toolbar.EnableTool(ID_RUN, True)
-            self.toolbar.EnableTool(ID_FLOWCHART, False)
+            # self.toolbar.EnableTool(ID_FLOWCHART, False)
             self.toolbar.EnableTool(ID_SET_ARGS, True)
             self.programmenu.Enable(ID_RUN, True)
             self.programmenu.Enable(ID_SET_ARGS, True)
@@ -1054,7 +1060,7 @@ class RheeFrame(Frame):
     def OnPython(self, event):
         if (self.pid is -1):
             self.toolbar.EnableTool(ID_RUN, False)
-            self.toolbar.EnableTool(ID_FLOWCHART, False)
+            # self.toolbar.EnableTool(ID_FLOWCHART, False)
             self.toolbar.EnableTool(ID_SET_ARGS, False)
             self.toolbar.EnableTool(ID_PYTHON, False)
             self.toolbar.EnableTool(ID_END, True)
@@ -1250,7 +1256,7 @@ class RheeFrame(Frame):
             self.SaveFile()
             #Update Recent Files
             self.toolbar.EnableTool(ID_RUN, True)
-            self.toolbar.EnableTool(ID_FLOWCHART, True)
+            # self.toolbar.EnableTool(ID_FLOWCHART, True)
             self.toolbar.EnableTool(ID_SET_ARGS, True)
             self.programmenu.Enable(ID_RUN, True)
             self.programmenu.Enable(ID_SET_ARGS, True)

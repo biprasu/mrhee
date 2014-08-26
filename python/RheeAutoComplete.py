@@ -41,6 +41,8 @@ keywords = [
     u'टिचो',
     u'खाका',
     U'काखा',
+    u'को',
+    u'मेरो',
     ]
 
 rhee_block_start = [

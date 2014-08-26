@@ -1,5 +1,8 @@
 #encoding=utf8
 
+import os
+import shutil
+
 map_num = {u'\u0966':'0', u'\u0967':'1', u'\u0968':'2', u'\u0969':'3',
             u'\u096a':'4', u'\u096b':'5', u'\u096c':'6', u'\u096d':'7',
             u'\u096e':'8' ,u'\u096f':'9'
@@ -33,6 +36,11 @@ class RheeCompiler:
 
     def __init__(self, targetfilename='temp.py'):
         self.temp = open(targetfilename,'wb')
+
+        filepath = os.path.abspath(targetfilename)
+        directory = os.path.split(filepath)[0]
+        shutil.copy2('libs.py', directory)
+
         self.temp.write('#encoding=UTF8\nimport codecs\nfrom Tkinter import *\n')
         self.temp.write('from libs import *\n\n')
 
@@ -362,6 +370,8 @@ def compile_file(filename, targetfilename="temp.py"):
     myLexer.build()
     myParser = RheeParser()
     myParser.build(myLexer)
+
+    print myParser.syntaxErrors
 
     ast = myParser.test(open(filename,'r').read().decode('utf8'), myLexer)
 
