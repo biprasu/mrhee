@@ -54,6 +54,7 @@ class RheeLexer:
     U'काखा'	: 'KAKHA',
     
     u'को'	: 'KO',
+    u'मेरो'	: 'MERO',
 	}
 	tokens  = reserved.values()
 	tokens += ['IDENTIFIER', 'DECIMALINTEGER', 'OCTALINTEGER', 'HEXAINTEGER', 'FLOAT', 'IMAGNUMBER', 'STRING']

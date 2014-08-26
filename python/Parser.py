@@ -14,7 +14,8 @@ class RheeParser:
 	('left', 'TIMES', 'DIVIDE'),
 	('left', 'MODULUS', 'POWER'),
 	('right', 'UMINUS'),
-	('left', 'DOT'),
+	('left', 'DOT', 'KO'),
+	('right', 'MERO'),
 	)
 
 	def p_begin(self, p):
@@ -211,7 +212,7 @@ class RheeParser:
 		p[0] = []
 
 	def p_variableArgs_multi(self, p):
-		'variableArgs : IDENTIFIER COMMA variableArgs'
+		'variableArgs : variableArgs COMMA IDENTIFIER'
 		p[0] = [p[1]] + p[3]
 	def p_variableArgs_single(self, p):
 		'variableArgs : IDENTIFIER'
@@ -310,6 +311,9 @@ class RheeParser:
 		'aryexpr : expr COLON expr'
 		p[0] = ('arrayslice', p.lineno(2), [p[1]], [p[3]])
 
+	def p_reference_self(self, p):
+		'reference : MERO reference'
+		p[0] = ('meroref', p.lineno(1), p[2])
 	def p_identifier(self, p):
 		'identifier : IDENTIFIER'
 		p[0] = ('identifier', p.lineno(1), p[1])

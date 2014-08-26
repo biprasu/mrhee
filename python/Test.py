@@ -101,11 +101,11 @@ program = u'''
 # बज	
 # क हटाउ
 # '''
-# program = u'''
-# क = ४
-# क += ४
-# क लेख
-# '''
+program = u'''
+मेरो क.क = ४
+मेरो क += ४
+मेरो क लेख
+'''
 
 myLexer = RheeLexer()
 myLexer.build()
@@ -117,15 +117,15 @@ myParser.build(myLexer)
 ast = myParser.test(program, myLexer)
 # print ast
 # interpreter zone
-from interpret import RheeInterpreter
-from UnitInterpreter import TracebackException
+# from interpret import RheeInterpreter
+# from UnitInterpreter import TracebackException
 
 
-try:
-	myInterpreter = RheeInterpreter()
-	myInterpreter.interpret(ast)
-except TracebackException as e:
-	print e.message
+# try:
+# 	myInterpreter = RheeInterpreter()
+# 	myInterpreter.interpret(ast)
+# except TracebackException as e:
+# 	print e.message
 
 
 # print type(4) is tuple
