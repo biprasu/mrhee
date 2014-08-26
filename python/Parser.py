@@ -309,11 +309,14 @@ class RheeParser:
 		p[0] = ('normal', p.lineno(1), [p[1]])
 	def p_aryexpr_slice(self, p):
 		'aryexpr : expr COLON expr'
+
 		p[0] = ('arrayslice', p.lineno(2), [p[1]], [p[3]])
+
 
 	def p_reference_self(self, p):
 		'reference : MERO reference'
 		p[0] = ('meroref', p.lineno(1), p[2])
+
 	def p_identifier(self, p):
 		'identifier : IDENTIFIER'
 		p[0] = ('identifier', p.lineno(1), p[1])

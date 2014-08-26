@@ -1,0 +1,31 @@
+<Autoindent (1 or 0)>
+<Word Wrap (1 or 0)>
+<Whitespace is visible on startup (1 or 0)>
+<Icon Size 16 24 or 32>
+<Max # of Recent Files 0 - whatever the user wants Reccomended not over 25>
+<Tab Width Reccomended 8 or 16>
+<Python arguments eg "-i" "-u" enter 0 for none built-in MUST HAVE A SPACE ON EITHER SIDE>
+<Default Directory, or 0 for none>
+#Text types for the file  Take the form of a string eg: fore:#ff0000,back:#adffae,size:8,face:courier,bold
+Normal
+Linenumber
+Bracecomplete
+Braceincomplete
+Character
+Classname
+Comment
+Functionname
+Keyword
+Number
+Operator
+String
+TripleQuotedString
+CaretForeground (Color string only, eg #df3458)
+SelectionForeground (Color string only, eg #df3458)
+SelectionBackground (Color string only, eg #df3458)
+<Prompt is visible on startup (1 or 0)>
+<Vertical Prompt Size 0.25 - 1.00>
+PromptTextString
+PromptCaretForeground (Color string only, eg #df3458)
+<Check Line Ending Format on Startup 0 or 1>
+<Line Ending Format 0(Unix), 1(Windows) or 2(Mac)>

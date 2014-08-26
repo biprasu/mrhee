@@ -9,11 +9,11 @@ import ply.lex as lex
 tokens = []
 
 class RheeLexer:
-	reserved = {
-	u'र'  : 'RA',
+    reserved = {
+    u'र'  : 'RA',
     u'वा' : 'WA',
-    
-	u'यदि' : 'YEDI',
+
+    u'यदि' : 'YEDI',
     u'भए' : 'BHAE',
     u'नभए'  : 'NABHAE',
     u'लेख' : 'LEKHA',
@@ -41,7 +41,7 @@ class RheeLexer:
     u'कोर' : 'KORA',
     u'मेटाउ' : 'METAU',
     u'हटाउ' : 'HATAU',
-    
+
     u'शुन्य' : 'SUNYA',
     u'साचो'	: 'SACHO',
     u'झुटो'	: 'JHUTO',
@@ -52,9 +52,12 @@ class RheeLexer:
     u'टिचो' : 'TICHO',
     u'खाका'	: 'KHAKA',
     U'काखा'	: 'KAKHA',
-    
+
     u'को'	: 'KO',
-    u'मेरो'	: 'MERO',
+    u'मेरो' : 'MERO',
+    }
+<<<<<<< HEAD
+    
 	}
 	tokens  = reserved.values()
 	tokens += ['IDENTIFIER', 'DECIMALINTEGER', 'OCTALINTEGER', 'HEXAINTEGER', 'FLOAT', 'IMAGNUMBER', 'STRING']
@@ -173,6 +176,16 @@ class RheeLexer:
 	def build(self, **kwargs):
 		self.lexer = lex.lex(module=self, **kwargs)
 
+    def tokenize(self, data):
+        'Test the lexer with input data'
+        self.lexer.input(data)
+        token_list = []
+        while True:
+            tok = self.lexer.token()
+            if not tok: break
+            token_list.append(tok)
+        return token_list
+
 	def test(self, data):
 		'Test the lexer with input data'
 		self.lexer.input(data)
@@ -184,11 +197,18 @@ class RheeLexer:
 	def get_tokens(self): 	return self.tokens
 	def get_lexer(self):	return self.lexer
 
+
 if __name__ == '__main__':
-	m = RheeLexer()
-	m.build()
-	m.test(u'''
-	क = ४
-	क += ४
-	क लेख
-		''')
+    m = RheeLexer()
+    m.build()
+    m.test(u'''
+काम हानोई(नं, क, ख, ग)
+    यदि नं > ० भए
+       हानोई(नं-१, क, ग, ख)
+       क, " बाट ", ग, " मा सार" लेख
+       हानोई(नं-१, ख, क, ग)
+    दिय
+मका
+
+हानोई(३, "पहिलो", "दोस्रो", "तेस्रो")
+        ''')
