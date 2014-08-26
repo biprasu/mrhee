@@ -14,7 +14,8 @@ class RheeParser:
 	('left', 'TIMES', 'DIVIDE'),
 	('left', 'MODULUS', 'POWER'),
 	('right', 'UMINUS'),
-	('left', 'DOT'),
+	('left', 'DOT', 'KO'),
+	('right', 'MERO'),
 	)
 
 	def p_begin(self, p):
@@ -211,8 +212,8 @@ class RheeParser:
 		p[0] = []
 
 	def p_variableArgs_multi(self, p):
-		'variableArgs : IDENTIFIER COMMA variableArgs'
-		p[0] = [p[1]] + p[3]
+		'variableArgs : variableArgs COMMA IDENTIFIER'
+		p[0] = p[1] + [p[3]]
 	def p_variableArgs_single(self, p):
 		'variableArgs : IDENTIFIER'
 		p[0] = [p[1]]
@@ -311,6 +312,10 @@ class RheeParser:
 
 		p[0] = ('arrayslice', p.lineno(2), [p[1]], [p[3]])
 
+
+	def p_reference_self(self, p):
+		'reference : MERO reference'
+		p[0] = ('meroref', p.lineno(1), p[2])
 
 	def p_identifier(self, p):
 		'identifier : IDENTIFIER'
@@ -447,4 +452,22 @@ if __name__ == '__main__':
 	myParser = RheeParser()
 	myParser.build(myLexer)
 	myParser.test(u'''
-यक()		''', myLexer)
+खाका वस्तु
+		क = ४
+		ख = ९
+		काम रचना()
+			क = ५
+			ग = ७
+		मका
+		काम टेस्ट(क, ख, ग)
+		७*८ चोटि
+			क लेख
+		टिचो
+		मका
+		काम फ़क्तोरिअल् (ल)
+			यदि ल==१ भए १ पठाउ अथवा ल * फ़क्तोरिअल्(ल-१) पठाउ
+		मका
+	काखा
+	त = वस्तु()
+	त.फ़क्तोरिअल्(५) लेख
+	त को फ़क्तोरिअल्(५) लेख''', myLexer)

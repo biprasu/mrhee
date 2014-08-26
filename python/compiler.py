@@ -5,6 +5,11 @@ map_num = {u'\u0966':'0', u'\u0967':'1', u'\u0968':'2', u'\u0969':'3',
             u'\u096e':'8' ,u'\u096f':'9'
             }
 
+choti_loop = 0
+def get_underscore():
+    underscore = '_'
+    return underscore*choti_loop
+
 def to_ascii(uni):
     temp = ''
     for digit in uni:
@@ -16,6 +21,9 @@ def unicode_to_str(uni):
     temp += uni.encode('utf-8').encode('hex')
     return temp
 
+class TracebackException(Exception):
+	def __init__(self, message):
+		Exception.__init__(self, message)
 
 class RheeCompiler:
     """docstring for RheeCompiler"""
@@ -25,7 +33,8 @@ class RheeCompiler:
 
     def __init__(self, targetfilename='temp.py'):
         self.temp = open(targetfilename,'wb')
-        self.temp.write('#encoding=UTF8\n\n')
+        self.temp.write('#encoding=UTF8\nimport codecs\nfrom Tkinter import *\n')
+        self.temp.write('from libs import *\n\n')
 
     def compile(self, trees, tab = None, fxn = None):
         if not tab: tab = self.tab
@@ -33,7 +42,7 @@ class RheeCompiler:
         for tree in trees:
             # print tree
             if not tree:	continue
-
+            # print tree, '\n'
             stmt = tree[0]
             if stmt == None:    continue
             lineno = tree[1]
@@ -68,12 +77,77 @@ class RheeCompiler:
                 return unicode_to_str(tree[2])
 
             elif stmt == 'functioncall':
-                fname = unicode_to_str(tree[2])
                 args = tree[3]
+                if tree[2] == u'अंक':
+                    fname = 'float'
+                    stmt = fname + "("
+                    for arg in args:
+                        if arg[0][0] == 'string':
+                            stmt += "'" + str(to_ascii(arg[0][2])) + "'" + ","
+                        else:   stmt += self.compile(arg) + ","
+                    stmt += ")"
 
-                stmt = fname + "("
-                for arg in args:    stmt += self.compile(arg) + ","
-                stmt += ")"
+                elif tree[2] == u'शब्द':
+                    fname = 'str'
+                    stmt = fname + "("
+                    for arg in args:
+                        if arg[0][0] == 'decimal':
+                            stmt += "'" + arg[0][2] + "'" + ","
+                        else:   stmt += self.compile(arg) + ","
+                    stmt += ")"
+
+                elif tree[2] == u'फाइलखोल':
+                    file_stmt = ''
+                    # print tree[2]
+                    filename = args[0][0][2]
+                    # print filename
+                    option = args[1][0][2]
+                    # print option
+                    option = "wb" if option ==  u"लेख्न"else ("rb" if option == u"पढ्न" else "ab")
+                    return "open(u'" + filename + "','" + option + "')"
+
+                elif tree[2] == u'__फाइललेखलाइन__' or tree[2] == u'__फाइललेख__':
+                    fp = self.compile(args[0])
+                    txt = ''
+                    for arg in args[1:]:
+                        txt += arg[0][2]
+                    return fp + ".write('" + txt + ('\\n' if tree[2] == u'__फाइललेखलाइन__' else '') + "')"
+
+                elif tree[2] == u'__बन्दगर__':
+                    fp = self.compile(tree[3][0])
+                    return fp + ".close()"
+
+                elif tree[2] == u'__फाइलपढ__':
+                    fp = self.compile(tree[3][0])
+                    return fp + ".readline()"
+
+                elif tree[2] == u'चित्र':
+                    window_name = tree[3][0][0][2]
+                    width, height = self.compile(tree[3][1]), self.compile(tree[3][2])
+                    window_stmt = "initgraphics([u'"+ window_name + "',"+ str(height) +','+ str(width) +"])"
+                    return window_stmt
+
+                elif tree[2] == u'__देखाउ__':
+                    wp = self.compile(tree[3][0])
+                    return "showgraphics([[''," + wp + "]])"
+
+                elif tree[2] == u'__बनाउ__':
+                    wp = self.compile(tree[3][0])
+                    return "updategraphics([[''," + wp + "]])"
+
+                elif tree[2] == u'बटन':
+                    return "keyboardgetkeys()"
+
+                elif tree[2] == u'__कोर__':
+                    wp = self.compile(tree[3][0])
+                    # type = tree[3][]
+                    return
+
+                else:
+                    fname = unicode_to_str(tree[2])
+                    stmt = fname + "("
+                    for arg in args:    stmt += self.compile(arg) + ","
+                    stmt += ")"
                 return stmt
 
             elif stmt == 'aryreference':
@@ -88,7 +162,21 @@ class RheeCompiler:
                         return ident + "[" + str(start) + ":" + str(end) + "]"
 
             elif stmt == 'reference':
+                # print tree
+                ref_stmt = ''
                 item = tree[2][0]
+
+                retobj = self.compile([item])
+
+                ref_stmt += retobj
+
+                for item in tree[2][1:]:
+                    ref_stmt += "." + self.compile([item])
+
+                return ref_stmt
+
+            elif stmt == 'meroref':
+                return 'self.' + self.compile([tree[2]])
 
 
             elif stmt == 'unaryminus':
@@ -134,7 +222,9 @@ class RheeCompiler:
                 refernc = tree[2]
                 if refernc[0] == 'identifier':
                     assign_stat = unicode_to_str(refernc[2]) + ' = '+ self.compile(tree[3]).encode('utf8')+  "#"+str(lineno) + '\n'
-                # elif refernc[0] == 'aryreference':
+                elif refernc[0] == 'reference' or refernc[0] == 'aryreference':
+                    assign_stat = self.compile([refernc]) + ' = ' + self.compile(tree[3]).encode('utf8')+  "#"+str(lineno) + '\n'
+
 
                 # assign_stat = unicode_to_str(refernc[2]) + ' = '+ self.compile(tree[3]).encode('utf8') + '\n'
                 self.temp.write(tab + assign_stat)
@@ -171,15 +261,15 @@ class RheeCompiler:
 
             elif stmt == 'return':
                 return_stmt = 'return '
-                for ele in tree[1]:
+                for ele in tree[2]:
                     return_stmt += self.compile([ele]) + ','
                 return_stmt = return_stmt[:-1] + "#"+str(lineno) +  '\n'
                 self.temp.write(tab + return_stmt.encode('utf8'))
 
             elif stmt == 'continue':
-                return 'continue'
+                self.temp.write(tab + 'continue\n')
             elif stmt == 'break':
-                return 'break'
+                self.temp.write(tab + 'break\n')
 
             elif stmt == 'slif':
                 if_stmt = 'if ' + self.compile(tree[2]) + " :" + "#"+str(lineno) +"\n"
@@ -220,14 +310,19 @@ class RheeCompiler:
                 self.compile(tree[3],tab+'\t')
 
             elif stmt == 'repeatloop':
+                global choti_loop
+                choti_loop += 1
                 iter = self.compile(tree[2])
-                repeat_stmt = 'for i in range(' + iter + '):'+ "#"+str(lineno) +'\n'
+                repeat_stmt = 'for ' + get_underscore() + ' in range(' + iter + '):'+ "#"+str(lineno) +'\n'
                 self.temp.write(tab + repeat_stmt.encode('utf8'))
                 self.compile(tree[3],tab+'\t')
+                choti_loop -= 1
 
             elif stmt == 'functiondef':
                 fname = tree[2]
-                fname_str = unicode_to_str(fname)
+                if fname == u'अंक':     fname_str = 'float'
+                elif fname == u'शब्द':  fname_str = 'str'
+                else:                   fname_str = unicode_to_str(fname)
                 fparams = tree[3]
                 fbody = tree[4]
                 if fxn == 'class':
@@ -247,6 +342,12 @@ class RheeCompiler:
                 self.compile(cbody,tab+'\t',fxn = 'class')
                 self.temp.write('\n')
 
+    def error(self, msg, lineno=None, tb=None):
+        if not tb:
+            print "ERROR!! " + msg + " in line number "+ str(lineno);
+        print "SamasyaSuchak: " + str(lineno)
+        raise TracebackException("Trace it Back")
+        exit(0)
 
     def __del__(self):
         self.temp.write('\n\n')#import temp')
@@ -275,14 +376,11 @@ if __name__ == '__main__':
     myParser.build(myLexer)
 
     ast = myParser.test(u'''
-	//क.क[४:४४] लेख
-	क = ४
-ख = ९
-जब सम्म शुन्य छ वा झुटो छ
-	क लेख
-	क += १
-बज
-                                ''', myLexer)
+
+क मा 'शब्द' कोर ७,७,"हरि", ७, 'हरियो'
+
+
+    ''', myLexer)
 
     myCompiler = RheeCompiler()
     myCompiler.compile(ast)

@@ -43,18 +43,20 @@ class RheeLexer:
     u'हटाउ' : 'HATAU',
 
     u'शुन्य' : 'SUNYA',
-    u'साचो'	: 'SACHO',
-    u'झुटो'	: 'JHUTO',
+    u'साचो'    : 'SACHO',
+    u'झुटो'    : 'JHUTO',
 
     u'बाहिर' : 'BAHIRA',
     u'अर्को': 'ARKO',
     u'चोटि' : 'CHOTI',
     u'टिचो' : 'TICHO',
-    u'खाका'	: 'KHAKA',
-    U'काखा'	: 'KAKHA',
+    u'खाका'    : 'KHAKA',
+    U'काखा'    : 'KAKHA',
 
-    u'को'	: 'KO',
+    u'को'    : 'KO',
+    u'मेरो' : 'MERO',
     }
+
     tokens  = reserved.values()
     tokens += ['IDENTIFIER', 'DECIMALINTEGER', 'OCTALINTEGER', 'HEXAINTEGER', 'FLOAT', 'IMAGNUMBER', 'STRING']
     tokens += ['PLUS', 'MINUS', 'DIVIDE', 'TIMES', 'POWER', 'MODULUS', 'LPARA', 'RPARA', 'LGPARA', 'RGPARA']
@@ -63,11 +65,11 @@ class RheeLexer:
     tokens += ['BOGUS', 'DOT']
 
     # we support these range of devanagari script
-    digit 		= ur'([\u0966-\u096F])'
-    nondigit 	= ur'([\u0900-\u0965])'
+    digit         = ur'([\u0966-\u096F])'
+    nondigit     = ur'([\u0900-\u0965])'
 
     # mathematical symbols
-    t_PLUS 	= ur'\+'
+    t_PLUS     = ur'\+'
     t_MINUS = ur'\-'
     t_DIVIDE = ur'/'
     t_TIMES = ur'\*'
@@ -77,10 +79,10 @@ class RheeLexer:
     # paranthesis
     t_LPARA = ur'\('
     t_RPARA = ur'\)'
-
+     
     t_LGPARA = ur'\['
     t_RGPARA = ur'\]'
-
+     
     # logical
     t_GE = ur'>='
     t_LE = ur'<='
@@ -96,15 +98,15 @@ class RheeLexer:
     t_DI = ur'/='
 
     # assignment
-    t_ASSIGNMENT 	= ur'='
-    t_COMMA 		= ur','
-    t_SEMICOLON 	= ur';'
-    t_COLON 		= ur':'
-    t_QUESTION 		= ur'\?'
+    t_ASSIGNMENT     = ur'='
+    t_COMMA         = ur','
+    t_SEMICOLON     = ur';'
+    t_COLON         = ur':'
+    t_QUESTION         = ur'\?'
 
     t_DOT = ur'\.'
 
-
+    
     def t_IDENTIFIER(self, token):
         ur'[\u0900-\u0965_][\u0900-\u0965_०-९\u200d]*'
         token.type = self.reserved.get(token.value,'IDENTIFIER')
@@ -130,11 +132,11 @@ class RheeLexer:
     def t_FLOAT(self, token):
         ur'[\u0966-\u096F]*\.[\u0966-\u096F]+([eE][+-]?[\u0966-\u096F]+)?'
         return token
-
+    
     def t_DECIMALINTEGER(self, token):
         ur'([\u0967-\u096F][\u0966-\u096F]*)|\u0966'
         return token
-
+    
     # end number system
 
 
@@ -171,8 +173,6 @@ class RheeLexer:
 
     def build(self, **kwargs):
         self.lexer = lex.lex(module=self, **kwargs)
-        pass
-
 
     def tokenize(self, data):
         'Test the lexer with input data'
@@ -184,7 +184,6 @@ class RheeLexer:
             token_list.append(tok)
         return token_list
 
-
     def test(self, data):
         'Test the lexer with input data'
         self.lexer.input(data)
@@ -193,8 +192,9 @@ class RheeLexer:
             if not tok: break
             print tok
 
-    def get_tokens(self): 	return self.tokens
-    def get_lexer(self):	return self.lexer
+    def get_tokens(self):     return self.tokens
+    def get_lexer(self):    return self.lexer
+
 
 if __name__ == '__main__':
     m = RheeLexer()

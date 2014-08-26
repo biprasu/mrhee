@@ -12,7 +12,8 @@ from RheeUtils import MapBreakPoints
 import re
 import time
 from RheeFindReplace import RheeFindReplaceDialog
-from RheeWatch import RheeWatch
+from RheeWatch import RheeWatch, to_uni
+from RheeErrors import error_map
 
 if (Platform == '__WXMSW__'):
     import win32api
@@ -116,6 +117,7 @@ class RheeFrame(Frame):
         self.bSizer = BoxSizer(VERTICAL)
         self.txtFile = RheeText(self, ID_APP)
         self.txtFile.MarkerDefine(MARKER_LINE,STC_MARK_ARROW | STC_MARK_BACKGROUND,'#FF0000','#00FF00')
+        self.txtFile.MarkerDefine(MARKER_LINE_ERROR,STC_MARK_ARROW | STC_MARK_BACKGROUND,'#FF0000','#F00000')
         self.txtFile.MarkerSetBackground(MARKER_BREAKPOINT, '#FF0000')
         self.Go = False
 
@@ -773,6 +775,39 @@ class RheeFrame(Frame):
             vardict[str(v)] = value
         self.WatchWindow.restart(vardict)
 
+    def ProcessError(self, errorstring):
+        #get the line number first
+        print errorstring
+        ln = re.findall(r"File \"(.+)\", line (\d+)", errorstring)
+
+        for path, line in ln:
+            if os.path.abspath(path) == os.path.abspath(self.outfile):
+                error_line = self.pytorhee[int(line)-1]
+                self.txtFile.MarkerDeleteAll(MARKER_LINE)
+                self.txtFile.MarkerAdd(error_line, MARKER_LINE_ERROR)
+                # self.txtFile.Marker
+                self.txtFile.GotoLine(error_line)
+                rhee_error_text = ''
+                for pythonerror in error_map.keys():
+                    if pythonerror in errorstring:
+                        rhee_error_text = error_map[pythonerror]
+                        break
+                else:
+                    rhee_error_text = u"कोडमा समस्या भेटियो"
+
+                rhee_error = u"लाइन %s मा: \n "% to_uni(str(error_line)) + rhee_error_text
+                d = MessageDialog(self, rhee_error,
+                                              u"गल्ति भेटियो", OK | ICON_ERROR)
+                d.ShowModal()
+                d.Destroy()
+                self.txtFile.MarkerDeleteAll(MARKER_LINE_ERROR)
+
+        if self.DebugActive: self.OnEnd(None)
+
+
+
+        # os.path.samefile()
+        pass
 
     def OnIdle(self, event):
         if not self.Go: return
@@ -803,9 +838,9 @@ class RheeFrame(Frame):
                     elif text == "The program finished and will be restarted" or text == '--Return--':
                         self.WriteDebugString('q\n')
                         return
-                        pass
                     else:
                         #TODO: Check out the prompt here
+                        if all(text.isalphanum()): continue
                         self.txtPrompt.SetReadOnly(0)
                         if len(text)>0 and text[:-1]!='\n': text+='\n'
 
@@ -820,6 +855,10 @@ class RheeFrame(Frame):
 
             stream = self.process.GetErrorStream()
             if (stream.CanRead()):
+
+                error = stream.read()
+                self.ProcessError(error)
+
                 stillreadingerror = True
                 self.needToUpdatePos = True
                 text = stream.read()
@@ -1131,6 +1170,7 @@ class RheeFrame(Frame):
         else:
             cmd = pythexec + " -u " + self.pythonargs + " \"" + self.outfile.filename + largs
             self.runcommand((cmd), event)
+        self.pytorhee, self.rheetopy = MapBreakPoints(self.breakpoints, self.outfile)
         self.Go = True
 
     def OnRunWithDebugger(self, event):
@@ -1264,7 +1304,17 @@ class RheeFrame(Frame):
             self.toolbar.ToggleTool(ID_TOGGLE_VIEWWHITESPACE, True)
 
     def OnFlowchart(self, event):
-        pass
+        if (self.txtFile.GetModify()):
+            d = MessageDialog(self,
+                              u"फाइलमा बदलाव आएको छ\nकृपया फाइल सेव गरेर मात्रै चलाउनु होला\nफाइल सेव गर्न चाहनुहुन्छ ?",
+                              u"ऋ", YES_NO | ICON_QUESTION)
+            answer = d.ShowModal()
+            d.Destroy()
+            if (answer == ID_YES):
+                self.OnSave(event)
+            else:
+                return
+
 
     def OnUnCommentRegion(self, event):
         selstart, selend = self.txtFile.GetSelection()
@@ -1350,7 +1400,7 @@ class RheeFrame(Frame):
 
                 if (self.process is None):
                     self.toolbar.EnableTool(ID_RUN, True)
-                    self.toolbar.EnableTool(ID_FLOWCHART, True)
+                    # self.toolbar.EnableTool(ID_FLOWCHART, True)
                     self.toolbar.EnableTool(ID_SET_ARGS, True)
                     self.programmenu.Enable(ID_RUN, True)
                     self.programmenu.Enable(ID_SET_ARGS, True)
@@ -1519,7 +1569,7 @@ class RheeFrame(Frame):
 
         else:
             self.toolbar.EnableTool(ID_RUN, False)
-            self.toolbar.EnableTool(ID_FLOWCHART, False)
+            # self.toolbar.EnableTool(ID_FLOWCHART, False)
             self.toolbar.EnableTool(ID_SET_ARGS, False)
             self.toolbar.EnableTool(ID_PYTHON, False)
             self.toolbar.EnableTool(ID_PYTHON_DEBUGGER, False)
@@ -1543,7 +1593,7 @@ class RheeFrame(Frame):
     def runcommand(self, command, event):
         if (len(self.filename) > 0) and (self.pid is -1):
             self.toolbar.EnableTool(ID_RUN, False)
-            self.toolbar.EnableTool(ID_FLOWCHART, False)
+            # self.toolbar.EnableTool(ID_FLOWCHART, False)
             self.toolbar.EnableTool(ID_SET_ARGS, False)
             self.toolbar.EnableTool(ID_PYTHON, False)
             self.toolbar.EnableTool(ID_PYTHON_DEBUGGER, False)
