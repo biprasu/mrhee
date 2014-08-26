@@ -31,7 +31,7 @@ class FlowChartPage(scrolled.ScrolledPanel):
         # self.IsRectReady = False
 
 
-class MainFrame(wx.Frame):
+class FlowChart(wx.Frame):
     def __init__(self, flowchartdir):
         wx.Frame.__init__(self, None, title="Simple Notebook Example")
 
@@ -40,11 +40,10 @@ class MainFrame(wx.Frame):
         p = wx.Panel(self)
         nb = wx.Notebook(p)
 
-        for file in os.listdir(flowchartdir):
+        for file in os.listdir(unicode(flowchartdir)):
             fullfile = os.path.join(flowchartdir, file)
             if os.path.isfile(fullfile) and file[-3:] == 'png':
-
-                nb.AddPage(FlowChartPage(nb, fullfile), file)
+                nb.AddPage(FlowChartPage(nb, fullfile), file[:-4])
 
         # Here we create a panel and a notebook on the panel
 
@@ -69,5 +68,5 @@ class MainFrame(wx.Frame):
 
 if __name__ == "__main__":
     app = wx.App()
-    MainFrame(flowchartdir='flowcharts\\').Show()
+    FlowChart(flowchartdir='flowcharts\\').Show()
     app.MainLoop()

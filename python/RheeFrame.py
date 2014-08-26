@@ -14,6 +14,8 @@ import time
 from RheeFindReplace import RheeFindReplaceDialog
 from RheeWatch import RheeWatch, to_uni
 from RheeErrors import error_map
+from RheeDrawFlowchart import draw_file
+from RheeFlowChart import FlowChart
 
 if (Platform == '__WXMSW__'):
     import win32api
@@ -1314,6 +1316,11 @@ class RheeFrame(Frame):
                 self.OnSave(event)
             else:
                 return
+        # try:
+        draw_file(self.filename, 'flowcharts')
+        FlowChart(flowchartdir = 'flowcharts').Show()
+        # except Exception, e:
+            # pass
 
 
     def OnUnCommentRegion(self, event):

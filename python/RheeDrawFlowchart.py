@@ -6,16 +6,17 @@ pydot example 2
 """
 import pydot
 import re
+import os
 
-def draw_function(text):
+def draw_function(text, dirname):
     firstline = text[:text.find('\n')]
     funcname = re.findall(ur'काम ([^\(]+)', firstline)[0]
-    draw_body(text, '', '', filename = funcname+u'.png')
+    draw_body(text, '', '', funcname+u'.png', dirname)
 
 def draw_classes():
     pass
 
-def draw_body(text, start, end, filename = 'flowchart.png'):
+def draw_body(text, start, end, filename, dirname):
     graph = pydot.Dot(graph_type='digraph', nodesep=2)
     rhee_text = []
     for l in text.split('\n'):
@@ -65,7 +66,7 @@ def draw_body(text, start, end, filename = 'flowchart.png'):
             conditional_list.append(node)
         if current_line[0:3] == u'सबै':
             sabai_list.append(node)
-        if current_line[0:4] == u'चोटि':
+        if re.match(ur'[०१२३४५६७८९]+ चोटि', current_line):
             choti_list.append(node)
         if current_line[0:4] == u'अथवा':
             athawa_list.append(node)
@@ -103,25 +104,43 @@ def draw_body(text, start, end, filename = 'flowchart.png'):
 
 
     # graph.add_node(node_a)
-    graph.write_png(filename)
+    graph.write_png(os.path.join(dirname, filename) )
 
 
-def draw_file(filename, dirname = ''):
+def draw_file(filename, dirname = '.'):
     #read from rhee file
+    if not filename or not dirname: return
     text = open(filename, 'r').read().decode('utf-8')
     # print type(text)
+
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    else:
+        for the_file in os.listdir(unicode(dirname)):
+            file_path = os.path.join(dirname, the_file)
+            try:
+                if os.path.isfile(file_path):
+                    if file_path[-3:] == 'png':
+                        os.unlink(file_path)
+            except Exception, e:
+                pass
+
     #seperate the function definitions into a list
     funcs = list(re.findall(ur"^\s*(काम.*?मका)\s*$",text,re.MULTILINE|re.DOTALL))
     classes = list(re.findall(ur"^\s*(खाका.*?काखा)\s*$",text,re.MULTILINE|re.DOTALL))
     # print funcs[0]
     for f in funcs+classes:
-        text = text.replace(funcs[0],'')
-    draw_body(text, u'शुरू', u'अन्त्य',u'.png',dirname)
+        text = text.replace(f,'')
+
+    filenameonly = os.path.split(filename)[-1]
+    filenamewithoutextension = os.path.splitext(filenameonly)[0]
+    draw_body(text, u'शुरू', u'अन्त्य', filenamewithoutextension+'.png', dirname)
+
     for f in funcs:
-        draw_function(f)
+        draw_function(f, dirname)
     # draw_body(text)
     # exit(0)
 
 
 if __name__ == '__main__':
-    draw_file("Rhee_Files/8puzzle.rhee")
+    draw_file("Rhee_Files/8puzzle.rhee", "flowcharts")
