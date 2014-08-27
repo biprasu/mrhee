@@ -1,3 +1,4 @@
+#encoding=utf8
 import wx
 import os
 import wx.lib.scrolledpanel as scrolled
@@ -17,12 +18,6 @@ class FlowChartPage(scrolled.ScrolledPanel):
         self.SetSizer(sizer)
         self.SetAutoLayout(1)
 
-        # self.SetupScrolling()
-        # self.EnableScrolling()
-        # self.Refresh()
-        # print self.GetScaleX()
-        # print self.GetScaleY()
-        # self.SetScale(10,10)
         self.SetupScrolling()
         # self.Bind(wx.EVT_PAINT, self.OnPaint)
         # sb.Bind(wx.EVT_MOTION, self.OnMove)
@@ -33,7 +28,7 @@ class FlowChartPage(scrolled.ScrolledPanel):
 
 class FlowChart(wx.Frame):
     def __init__(self, flowchartdir):
-        wx.Frame.__init__(self, None, title="Simple Notebook Example")
+        wx.Frame.__init__(self, None, title=u"फ्लोचार्ट")
 
         pages = []
 

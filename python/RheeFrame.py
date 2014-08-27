@@ -1372,8 +1372,8 @@ class RheeFrame(Frame):
             self.ID_RECENT_FILES.append(self.ID_RECENT_FILES[ti] + 1)
         else:
             self.ID_RECENT_FILES.append(ID_RECENT_FILES_BASE)
-        self.recentfiles.insert(0, self.filename)
-        self.WriteRecentFiles()
+        # self.recentfiles.insert(0, self.filename)
+        # self.WriteRecentFiles()
         if (self.txtFile.GetModify()) or OpenInNewWindow:
             if (Platform == '__WXMSW__'):
                 t = self.filename.replace("\\", "/")

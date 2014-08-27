@@ -39,7 +39,8 @@ class RheeCompiler:
 
         filepath = os.path.abspath(targetfilename)
         directory = os.path.split(filepath)[0]
-        shutil.copy2('libs.py', directory)
+        if not os.path.exists (os.path.join(directory, "libs.py")):
+            shutil.copy2('libs.py', directory)
 
         self.temp.write('#encoding=UTF8\nimport codecs\nfrom Tkinter import *\n')
         self.temp.write('from libs import *\n\n')
@@ -94,6 +95,11 @@ class RheeCompiler:
                             stmt += "'" + str(to_ascii(arg[0][2])) + "'" + ","
                         else:   stmt += self.compile(arg) + ","
                     stmt += ")"
+                elif tree[2] == u'अनियमित':
+                    stmt = "randomnum()"
+
+                elif tree[2] == u'गन':
+                    stmt = "len(" + self.compile(args[0]) + ")"
 
                 elif tree[2] == u'शब्द':
                     fname = 'str'
@@ -137,19 +143,34 @@ class RheeCompiler:
 
                 elif tree[2] == u'__देखाउ__':
                     wp = self.compile(tree[3][0])
-                    return "showgraphics([[''," + wp + "]])"
+                    # return "showgraphics([[''," + wp + "]])"
+                    return "showgraphics([" + wp + "])"
 
                 elif tree[2] == u'__बनाउ__':
                     wp = self.compile(tree[3][0])
-                    return "updategraphics([[''," + wp + "]])"
+                    return "updategraphics([" + wp + "])"
+
+                elif tree[2] == u'__मेटाउ__':
+                    wp = self.compile(tree[3][0])
+                    return "cleargraphics([" + wp + "])"
+
+                elif tree[2] == u'__लुकाउ__':
+                    wp = self.compile(tree[3][0])
+                    return "hidegraphics([" + wp + "])"
+
+                elif tree[2] == u'__हटाउ__':
+                    wp = self.compile(tree[3][0])
+                    return "closegraphics([" + wp + "])"
 
                 elif tree[2] == u'बटन':
                     return "keyboardgetkeys()"
 
                 elif tree[2] == u'__कोर__':
-                    wp = self.compile(tree[3][0])
+                    # TODO : Sort this out !!
+                    wp = ','.join([self.compile(i) for i in tree[3]])
                     # type = tree[3][]
-                    return
+                    return "drawgraphics([" + wp + "])"
+                    # return
 
                 else:
                     fname = unicode_to_str(tree[2])
@@ -308,7 +329,8 @@ class RheeCompiler:
                 pre = self.compile(tree[3])
                 post = self.compile(tree[4])
                 inc = self.compile(tree[5])
-                stmt_for = "for "+ unicode_to_str(tree[2]) + " in range(" + pre + "," + post + "," + inc +"):"+ "#"+str(lineno) +"\n"
+
+                stmt_for = "for "+ unicode_to_str(tree[2][2]) + " in range(" + pre + "," + post + "," + inc +"):"+ "#"+str(lineno) +"\n"
                 self.temp.write(tab + stmt_for.encode('utf8'))
                 self.compile(tree[6], tab+'\t')
 
@@ -321,7 +343,11 @@ class RheeCompiler:
                 global choti_loop
                 choti_loop += 1
                 iter = self.compile(tree[2])
-                repeat_stmt = 'for ' + get_underscore() + ' in range(' + iter + '):'+ "#"+str(lineno) +'\n'
+                if not tree[3][0]:
+                    p = 'pass'
+                else:
+                    p = ''
+                repeat_stmt = 'for ' + get_underscore() + ' in range(' + iter + '):'+ p+ "#"+str(lineno) +'\n'
                 self.temp.write(tab + repeat_stmt.encode('utf8'))
                 self.compile(tree[3],tab+'\t')
                 choti_loop -= 1
@@ -371,9 +397,9 @@ def compile_file(filename, targetfilename="temp.py"):
     myParser = RheeParser()
     myParser.build(myLexer)
 
-    print myParser.syntaxErrors
-
     ast = myParser.test(open(filename,'r').read().decode('utf8'), myLexer)
+    if ast[0][0] == 'SyntaxError':
+        pass
 
     myCompiler = RheeCompiler(targetfilename)
     myCompiler.compile(ast)

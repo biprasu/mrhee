@@ -3,20 +3,24 @@
 import os
 import codecs
 from Tkinter import *
+import random
 
 to_col = {
 
-    u"रातो" : "red",
-    u"हरियो" : "green",
-    u"निलो" : "blue",
-    u"खैरो" : "brown",
-    u"सुन्तला" : "orange",
-    u"कालो" : "black",
-    u"सेतो" : "white",
-    u"पहेलो" : "yellow",
-    u"प्याजि" : "purple",
-    u"रानि" : "pink",
+    "रातो" : "red",
+    "हरियो" : "green",
+    "निलो" : "blue",
+    "खैरो" : "brown",
+    "सुन्तला" : "orange",
+    "कालो" : "black",
+    "सेतो" : "white",
+    "पहेलो" : "yellow",
+    "प्याजि" : "purple",
+    "रानि" : "pink",
 }
+
+def randomnum():
+    return random.randint(0, 1000000)
 
 def openfile(args):
     if len(args)!= 2:   raise ArgumentError()
@@ -111,34 +115,34 @@ def initgraphics(args):
 
 def hidegraphics(args):
     global root, canvas
-    # root = args[0][1]
+    root = args[0][1]
     root.withdraw()
     return
 
 def showgraphics(args):
     global root, canvas
-    # root = args[0][1]
+    root = args[0][1]
     root.deiconify()
     root.update()
     return
 
 def cleargraphics(args):
     global root, canvas
-    # root,canvas = args[0][1],args[0][2]
+    root,canvas = args[0][1],args[0][2]
     canvas.delete(ALL)
     root.update()
     return
 
 def closegraphics(args):
     global root, canvas
-    # root = args[0][1]
+    root = args[0][1]
     root.destroy()
     return
 
 def updategraphics(args):
     global root, canvas
 
-    # root = args[0][1]
+    root = args[0][1]
     try:
         root.update()
     except:
@@ -148,21 +152,22 @@ def updategraphics(args):
 
 def drawgraphics(args):
     
-    if args[1] == u"गोलो":
+    if args[1] == "गोलो":
          drawcircle(args)
-    elif args[1] == u"कोठा":
+    elif args[1] == "कोठा":
          drawrectangle(args)
-    elif args[1] == u"लाइन":
+    elif args[1] == "लाइन":
          drawline(args)
-    elif args[1] == u"डट":
+    elif args[1] == "डट":
          drawpoint(args)
-    elif args[1] == u"शब्द":
+    elif args[1] == "शब्द":
         drawtext(args)
 
     return
 
 
 def drawpoint(args):
+    global root, canvas
     argnum = len(args)
     c1 = int(args[2])
     c2 = int(args[3])
@@ -179,18 +184,21 @@ def drawtext(args):
     argnum = len(args)
     c1 = int(args[2])
     c2 = int(args[3])
-    text = args[4].encode("UTF8")
+    text = args[4]
     size = int(args[5]) if argnum>5 else None
     color = to_col[args[6]] if argnum>6 else None
     font = "a " + str(size) if size is not None else "0 "
     
-    # root,canvas = args[0][1], args[0][2]
+    root,canvas = args[0][1], args[0][2]
     canvas.create_text(c1,c2,text=text,font=font,fill=color,anchor="nw")
     root.update()
     return
 
 def drawline(args):
     'requires the canvas, 4 coords compulsory and width and foreground color optional'
+
+    global root, canvas
+
     argnum = len(args)
     
     c1 = int(args[2])
@@ -209,8 +217,9 @@ def drawline(args):
 
 def drawcircle(args):
     'requres canvas, 2 coords, radius compulsory; width, outline, fill optional'
+    global root, canvas
     argnum = len(args)
-    
+
     x = int(args[2])
     y = int(args[3])
     r = int(args[4])
@@ -225,6 +234,7 @@ def drawcircle(args):
 
 def drawrectangle(args):
     'requires the canvas, 4 coords compulsory and width and foreground color optional'
+    global root, canvas
     argnum = len(args)
 
     c1 = int(args[2])
@@ -240,6 +250,9 @@ def drawrectangle(args):
     canvas.update()
     return
 
+# def draw(args):
+#     master, canvas = args[0]
+#     draw_type = args[1]
 
 
 def checklibrary(fname):
