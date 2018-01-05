@@ -1,21 +1,22 @@
 #encoding=utf8
 
-from wx import *
-from wx.stc import *
-from RheeVariables import *
-from RheePrompt import RheePrompt
-from RheeText import RheeText
-from wx.lib.dialogs import ScrolledMessageDialog
-from compiler import compile_file
-import RheeAutoComplete
-from RheeUtils import MapBreakPoints
 import re
 import time
+
+from wx.lib.dialogs import ScrolledMessageDialog
+from wx.stc import *
+
+import RheeAutoComplete
 from RheeFindReplace import RheeFindReplaceDialog
-from RheeWatch import RheeWatch, to_uni
-from RheeErrors import error_map
-from RheeDrawFlowchart import draw_file
 from RheeFlowChart import FlowChart
+from RheePrompt import RheePrompt
+from RheeText import RheeText
+from RheeVariables import *
+from RheeWatch import RheeWatch, to_uni
+from language.compiler import compile_file
+from utils.RheeDrawFlowchart import draw_file
+from utils.RheeErrors import error_map
+from utils.RheeUtils import MapBreakPoints
 
 if (Platform == '__WXMSW__'):
     import win32api
@@ -223,7 +224,7 @@ class RheeFrame(Frame):
         menuBar.Append(helpmenu, "&Help")
 
         #TODO: check
-        # self.SetMenuBar(menuBar)
+        self.SetMenuBar(menuBar)
 
 
         EVT_MENU(self, ID_NEW, self.OnNew)
@@ -245,11 +246,12 @@ class RheeFrame(Frame):
         EVT_MENU(self, ID_REPLACE, self.OnMenuReplace)
         EVT_MENU(self, ID_SWITCHEROO, self.OnMenuSwitcheroo)
 
-        EVT_COMMAND_FIND(self, -1, self.OnFind)
-        EVT_COMMAND_FIND_NEXT(self, -1, self.OnFind)
-        EVT_COMMAND_FIND_REPLACE(self, -1, self.OnFind)
-        EVT_COMMAND_FIND_REPLACE_ALL(self, -1, self.OnFind)
-        EVT_COMMAND_FIND_CLOSE(self, -1, self.OnFindClose)
+        # self.Bind(EVT_COMMAND_F)
+        EVT_FIND(self, -1, self.OnFind)
+        EVT_FIND_NEXT(self, -1, self.OnFind)
+        EVT_FIND_REPLACE(self, -1, self.OnFind)
+        EVT_FIND_REPLACE_ALL(self, -1, self.OnFind)
+        EVT_FIND_CLOSE(self, -1, self.OnFindClose)
 
         EVT_MENU(self, ID_GOTO, self.OnGoTo)
 
@@ -288,7 +290,7 @@ class RheeFrame(Frame):
 
         self.SetupPrefsPrompt()
 
-        EVT_END_PROCESS(self, -1, self.OnProcessEnded)
+        EVT_END_PROCESS(self,self.OnProcessEnded)
         EVT_IDLE(self, self.OnIdle)
 
         #Arguments To Program
@@ -451,7 +453,7 @@ class RheeFrame(Frame):
             self.txtPromptSize = int(s)
             l = len(self.txtPromptStyleArray)
             x = 0
-            while (x < l):
+            while x < l:
                 s = fin.readline().rstrip()
                 self.txtPromptStyleArray[x] = s
                 x = x + 1
@@ -931,7 +933,7 @@ class RheeFrame(Frame):
         f.Show(True)
 
     def OnOpen(self, event):
-        dlg = FileDialog(self, "Open", "", "", wildcard, OPEN)
+        dlg = FileDialog(self, "Open", "", "", wildcard, FD_OPEN)
         if (len(self.ddirectory) > 0):
             try:
                 dlg.SetDirectory(self.ddirectory)
@@ -1168,7 +1170,14 @@ class RheeFrame(Frame):
 
 
         self.outfile = os.path.join(os.path.split(self.filename)[0],'temp.py')
-        compile_file(self.filename, self.outfile)
+        r = compile_file(self.filename, self.outfile)
+        if not r:
+            d = MessageDialog(self,
+                              u"कोडमा समस्या रहेको छ, कृपया सच्याउनुहोस ।",
+                              u"ऋ", OK | ICON_ERROR)
+            d.ShowModal()
+            d.Destroy()
+            return
         # return
 
         if (Platform == '__WXMSW__'):
@@ -1639,7 +1648,7 @@ class RheeFrame(Frame):
             self.process = Process(self)
             self.process.Redirect()
             if (Platform == '__WXMSW__'):
-                self.pid = Execute(command, EXEC_ASYNC | EXEC_NOHIDE, self.process)
+                self.pid = Execute(command, EXEC_ASYNC, self.process)
             else:
                 self.pid = Execute(command, EXEC_ASYNC, self.process)
             self.txtPrompt.SetFocus()

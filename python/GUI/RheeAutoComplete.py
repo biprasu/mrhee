@@ -1,6 +1,6 @@
 #encoding=UTF8
 
-from Lexer import RheeLexer
+from language.Lexer import RheeLexer
 L = RheeLexer()
 L.build()
 

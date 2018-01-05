@@ -4,7 +4,6 @@
 # import inspect
 # import sys, os, os.path
 
-from wx import *
 # from wx.stc import *
 
 # import Prefs
@@ -44,7 +43,7 @@ def GetRightMostText(lineoftext):
 
 #*********************************************************************************************************************
 
-from RheeFrame import RheeFrame
+from GUI.RheeFrame import RheeFrame
 
 #*********************************************************************************************************************
 
@@ -59,6 +58,9 @@ class RheeApp(App):
 
         return True
 
+# Set the dot path here... if set in system path, then it is unnecessary.
+import os
+os.environ["PATH"] += r";C:\Program Files (x86)\Graphviz2.38\bin"
 
 app = RheeApp(0)
 app.MainLoop()

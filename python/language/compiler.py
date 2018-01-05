@@ -278,6 +278,7 @@ class RheeCompiler:
                     if tag == 'identifier':
                         var  = unicode_to_str(item[0][2])
                         input_stmt += var + ', '
+                # todo: remove the eval
                 input_stmt = input_stmt[:-2]+ ' = raw_input()'+  "#"+str(lineno) +'\n'
                 self.temp.write(tab + input_stmt.encode('utf8'))
 
@@ -398,11 +399,15 @@ def compile_file(filename, targetfilename="temp.py"):
     myParser.build(myLexer)
 
     ast = myParser.test(open(filename,'r').read().decode('utf8'), myLexer)
-    if ast[0][0] == 'SyntaxError':
+    try:
+        if ast[0][0] == 'SyntaxError':
+            return False
+    except:
         pass
 
     myCompiler = RheeCompiler(targetfilename)
     myCompiler.compile(ast)
+    return True
 
 if __name__ == '__main__':
 

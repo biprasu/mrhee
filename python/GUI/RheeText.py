@@ -29,7 +29,6 @@ class RheeText(StyledTextCtrl):
         self.RegisterImage(AUTOCOMPLETE_VARIABLE, Bitmap(bitmapdirectory + '/autocomplete_variable.png') )
         self.RegisterImage(AUTOCOMPLETE_INBUILT, Bitmap(bitmapdirectory + '/autocomplete_inbuilt.png') )
         self.RegisterImage(AUTOCOMPLETE_FUNCTION_CLASS, Bitmap(bitmapdirectory + '/autocomplete_function_class.png') )
-
         EVT_STC_MODIFIED(parent, id, self.OnModified)
         EVT_UPDATE_UI(self, id, self.OnUpdateUI)
         EVT_KEY_DOWN(self, self.OnKeyDown)

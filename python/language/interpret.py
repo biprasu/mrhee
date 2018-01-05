@@ -1,8 +1,9 @@
 #encoding=utf8
 
+from UnitInterpreter import ContinueException, BreakException
 from UnitInterpreter import UnitInterpreter
-from UnitInterpreter import ContinueException, BreakException, TracebackException
-from InterpreterLibrary import InterpreterLibs
+from utils.InterpreterLibrary import InterpreterLibs
+
 
 class RheeInterpreter(UnitInterpreter, InterpreterLibs):
 	"""docstring for RheeInterpreter"""
@@ -144,7 +145,6 @@ if __name__ == '__main__':
 	from Lexer import RheeLexer
 	from Parser import RheeParser
 	tokens = []
-	from Lexer import tokens
 	myLexer = RheeLexer()
 	myLexer.build()
 	myParser = RheeParser()

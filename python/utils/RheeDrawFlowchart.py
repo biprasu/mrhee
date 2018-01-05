@@ -104,7 +104,7 @@ def draw_body(text, start, end, filename, dirname):
 
 
     # graph.add_node(node_a)
-    graph.write_png(os.path.join(dirname, filename) )
+    graph.write_png(os.path.join(dirname, filename), encoding="utf-8" )
 
 
 def draw_file(filename, dirname = '.'):

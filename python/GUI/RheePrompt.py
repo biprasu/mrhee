@@ -81,7 +81,7 @@ class RheePrompt(StyledTextCtrl):
             if (self.GetCurrentPos() < self.editpoint):
                 self.GotoPos(self.editpoint)
             return
-        elif keycode == WXK_PRIOR:
+        elif keycode == WXK_PAGEUP :
             if (self.GetCurrentPos() < self.editpoint):
                 self.GotoPos(self.editpoint)
             return

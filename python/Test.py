@@ -14,31 +14,26 @@
 # 	pass
 # print i[0] 
 
-from Lexer import RheeLexer
+# Parser Zone
+from Parser import RheeParser  # parser was an in-built library X.X
 
+from language.Lexer import RheeLexer
 
 # for item in testset:
 # 	myLexer.test(testset[item])
 # 	print item
-
 # myLexer.test(u'''यदि क==ख भए
 # 	दिय''')
 # from TestSet import gTest
 # myParser = RheeParser()
 # myParser.build(myLexer)
 # myParser.test(gTest['normal'], myLexer)
-
 # print int('0x34')
 # print float('3.4e-3')
-
 # a = {'sd':3}
 # print a.get('sd', "test")
 # exit(0)
-
-# Parser Zone
-from Parser import RheeParser									# parser was an in-built library X.X
 tokens = []
-from Lexer import tokens
 
 program = u'''
 	खाका वस्तु
